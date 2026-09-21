@@ -6,9 +6,9 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Pupverse/Scenes/MainMenu.unity
+    path: Assets/Scenes/MainMenu.unity
     guid: a9d0e40a37b1345d0816e2f39b96064b
   - enabled: 1
-    path: Assets/Pupverse/Scenes/Battle.unity
+    path: Assets/Scenes/Battle.unity
     guid: ce032a573c64d4a60af506103a685581
   m_configObjects: {}

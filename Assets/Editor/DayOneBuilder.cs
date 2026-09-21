@@ -13,7 +13,7 @@ namespace Pupverse.Editor
 {
     public static class DayOneBuilder
     {
-        const string Root = "Assets/Pupverse/";
+        const string Root = "Assets/";
         static Font font;
         static Sprite rounded, disc, glow, ring;
         static CardData raven, brooklyn;
@@ -74,10 +74,10 @@ namespace Pupverse.Editor
             heroImporter.textureType=TextureImporterType.Sprite; heroImporter.spriteImportMode=SpriteImportMode.Single;
             heroImporter.alphaIsTransparency=true; heroImporter.mipmapEnabled=false; heroImporter.maxTextureSize=2048;
             heroImporter.SaveAndReimport();
-            var source=JsonUtility.FromJson<WebCards>(File.ReadAllText(Root+"Data/WebCards.json"));
+            var source=JsonUtility.FromJson<WebCards>(File.ReadAllText(Root+"Cards/WebCards.json"));
             foreach(var web in source.cards)
             {
-                string path=Root+"Data/"+web.name+".asset";
+                string path=Root+"Cards/"+web.name+".asset";
                 var card=AssetDatabase.LoadAssetAtPath<CardData>(path);
                 if(!card) {card=ScriptableObject.CreateInstance<CardData>();AssetDatabase.CreateAsset(card,path);}
                 card.id=web.id;card.displayName=web.name;card.series=web.series;card.year=web.year;

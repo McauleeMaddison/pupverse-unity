@@ -8,8 +8,8 @@ namespace Pupverse.Tests
         CardData raven,brooklyn;
         [SetUp] public void Load()
         {
-            raven=AssetDatabase.LoadAssetAtPath<CardData>("Assets/Pupverse/Data/Raven.asset");
-            brooklyn=AssetDatabase.LoadAssetAtPath<CardData>("Assets/Pupverse/Data/Brooklyn.asset");
+            raven=AssetDatabase.LoadAssetAtPath<CardData>("Assets/Cards/Raven.asset");
+            brooklyn=AssetDatabase.LoadAssetAtPath<CardData>("Assets/Cards/Brooklyn.asset");
             Assert.That(raven,Is.Not.Null);Assert.That(brooklyn,Is.Not.Null);
         }
         [TestCase(CardStat.Power,109,95,BattleWinner.Player)]

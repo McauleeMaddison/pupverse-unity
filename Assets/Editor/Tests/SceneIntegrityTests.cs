@@ -10,7 +10,7 @@ namespace Pupverse.Tests
         [TestCase("Battle")]
         public void SavedScenesRetainScriptsAndBindings(string sceneName)
         {
-            var scene = EditorSceneManager.OpenScene("Assets/Pupverse/Scenes/" + sceneName + ".unity");
+            var scene = EditorSceneManager.OpenScene("Assets/Scenes/" + sceneName + ".unity");
             foreach (var root in scene.GetRootGameObjects())
             {
                 foreach (var child in root.GetComponentsInChildren<Transform>(true))

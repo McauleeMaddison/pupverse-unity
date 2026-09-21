@@ -1,0 +1,1 @@
+{"name": "Pupverse.Tests", "rootNamespace": "Pupverse.Tests", "references": ["Pupverse.Runtime", "Pupverse.Editor", "Unity.ugui"], "includePlatforms": ["Editor"], "optionalUnityReferences": ["TestAssemblies"]}

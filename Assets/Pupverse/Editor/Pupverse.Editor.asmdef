@@ -1,0 +1,1 @@
+{"name": "Pupverse.Editor", "rootNamespace": "Pupverse.Editor", "references": ["Pupverse.Runtime", "Unity.ugui"], "includePlatforms": ["Editor"]}

@@ -1,0 +1,79 @@
+{
+  "cards": [
+    {
+      "id": "crypto-brooklyn",
+      "name": "Brooklyn",
+      "pack": "CryptoPups",
+      "series": "CryptoPups",
+      "year": 2024,
+      "rarity": "Epic",
+      "element": "Wavebyte",
+      "frontImage": "/cards/crypto/brooklyn-front.png",
+      "stats": {
+        "power": 85,
+        "speed": 87,
+        "intelligence": 78,
+        "defence": 80,
+        "luck": 79
+      },
+      "ability": {
+        "name": "Coast Rush",
+        "description": "Brooklyn charges with ocean momentum, gaining +15 Speed and +10 Power for one round."
+      },
+      "abilityBoosts": {
+        "speed": 15,
+        "power": 10
+      }
+    },
+    {
+      "id": "crypto-raven",
+      "name": "Raven",
+      "pack": "CryptoPups",
+      "series": "CryptoPups",
+      "year": 2025,
+      "rarity": "Mythic",
+      "element": "Dark Nova",
+      "frontImage": "/cards/crypto/raven-front.png",
+      "stats": {
+        "power": 91,
+        "speed": 82,
+        "intelligence": 90,
+        "defence": 84,
+        "luck": 77
+      },
+      "ability": {
+        "name": "Nova Howl",
+        "description": "Raven channels dark star energy, gaining +18 Power and +14 Intelligence for one round."
+      },
+      "abilityBoosts": {
+        "power": 18,
+        "intelligence": 14
+      }
+    },
+    {
+      "id": "cyber-jinx",
+      "name": "Jinx",
+      "pack": "CyberPups",
+      "series": "CyberPups",
+      "year": 2025,
+      "rarity": "Legendary",
+      "element": "Ember Shield",
+      "frontImage": "/cards/cyber/jinx-front.png",
+      "stats": {
+        "power": 89,
+        "speed": 76,
+        "intelligence": 83,
+        "defence": 93,
+        "luck": 71
+      },
+      "ability": {
+        "name": "Plasma Bulwark",
+        "description": "Jinx activates a burning shield wall, gaining +18 Defence and +10 Power for one round."
+      },
+      "abilityBoosts": {
+        "defence": 18,
+        "power": 10
+      }
+    }
+  ]
+}

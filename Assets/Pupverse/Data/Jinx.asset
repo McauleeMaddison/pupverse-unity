@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 07586efbcd0f34aacbd2c3d63c1c8cd1, type: 3}
+  m_Name: Jinx
+  m_EditorClassIdentifier: Pupverse.Runtime::Pupverse.CardData
+  id: cyber-jinx
+  displayName: Jinx
+  series: CyberPups
+  element: Ember Shield
+  year: 2025
+  rarity: 4
+  stats:
+    power: 89
+    speed: 76
+    intelligence: 83
+    defence: 93
+    luck: 71
+  abilityName: Plasma Bulwark
+  abilityDescription: Jinx activates a burning shield wall, gaining +18 Defence and +10 Power for one round.
+  abilityBoosts:
+    power: 10
+    speed: 0
+    intelligence: 0
+    defence: 18
+    luck: 0
+  fact: Jinx raises a burning shield with Plasma Bulwark.
+  originalCardArt: {fileID: 2800000, guid: f215a294df102463ba00969b353cfb50, type: 3}
+  heroArt: {fileID: 0}
+  portraitUV:
+    serializedVersion: 2
+    x: 0.08
+    y: 0.65
+    width: 0.4
+    height: 0.28

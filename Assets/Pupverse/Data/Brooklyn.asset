@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 07586efbcd0f34aacbd2c3d63c1c8cd1, type: 3}
+  m_Name: Brooklyn
+  m_EditorClassIdentifier: Pupverse.Runtime::Pupverse.CardData
+  id: crypto-brooklyn
+  displayName: Brooklyn
+  series: CryptoPups
+  element: Wavebyte
+  year: 2024
+  rarity: 3
+  stats:
+    power: 85
+    speed: 87
+    intelligence: 78
+    defence: 80
+    luck: 79
+  abilityName: Coast Rush
+  abilityDescription: Brooklyn charges with ocean momentum, gaining +15 Speed and +10 Power for one round.
+  abilityBoosts:
+    power: 10
+    speed: 15
+    intelligence: 0
+    defence: 0
+    luck: 0
+  fact: Brooklyn rides ocean momentum with Coast Rush.
+  originalCardArt: {fileID: 2800000, guid: fe7dac01d9684416c8f1e358e1ccf359, type: 3}
+  heroArt: {fileID: 0}
+  portraitUV:
+    serializedVersion: 2
+    x: 0.063
+    y: 0.656
+    width: 0.432
+    height: 0.3

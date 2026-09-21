@@ -1,0 +1,15 @@
+{
+  "folders": [
+    {
+      "name": "Pupverse",
+      "path": "."
+    }
+  ],
+  "extensions": {
+    "recommendations": [
+      "visualstudiotoolsforunity.vstuc",
+      "ms-dotnettools.csharp",
+      "ms-dotnettools.csdevkit"
+    ]
+  }
+}

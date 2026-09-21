@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="12" result="Passed" total="12" passed="12" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-09-21 12:24:01Z" end-time="2026-09-21 12:24:01Z" duration="0.0649643">
+  <test-suite type="TestSuite" id="1000" name="Pupverse" fullname="Pupverse" runstate="Runnable" testcasecount="12" result="Passed" start-time="2026-09-21 12:24:01Z" end-time="2026-09-21 12:24:01Z" duration="0.064964" total="12" passed="12" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="EditMode" />
+    </properties>
+    <test-suite type="Assembly" id="1017" name="Pupverse.Tests.dll" fullname="/Users/mcauleemaddison/Desktop/Pupverse/Library/ScriptAssemblies/Pupverse.Tests.dll" runstate="Runnable" testcasecount="12" result="Passed" start-time="2026-09-21 12:24:01Z" end-time="2026-09-21 12:24:01Z" duration="0.061665" total="12" passed="12" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="4625" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+        <property name="EditorOnly" value="True" />
+      </properties>
+      <test-suite type="TestSuite" id="1018" name="Pupverse" fullname="Pupverse" runstate="Runnable" testcasecount="12" result="Passed" start-time="2026-09-21 12:24:01Z" end-time="2026-09-21 12:24:01Z" duration="0.061520" total="12" passed="12" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="1019" name="Tests" fullname="Pupverse.Tests" runstate="Runnable" testcasecount="12" result="Passed" start-time="2026-09-21 12:24:01Z" end-time="2026-09-21 12:24:01Z" duration="0.061417" total="12" passed="12" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestFixture" id="1001" name="BattleRulesTests" fullname="Pupverse.Tests.BattleRulesTests" classname="Pupverse.Tests.BattleRulesTests" runstate="Runnable" testcasecount="10" result="Passed" start-time="2026-09-21 12:24:01Z" end-time="2026-09-21 12:24:01Z" duration="0.016415" total="10" passed="10" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-case id="1010" name="InvalidStatFails" fullname="Pupverse.Tests.BattleRulesTests.InvalidStatFails" methodname="InvalidStatFails" classname="Pupverse.Tests.BattleRulesTests" runstate="Runnable" seed="1861244116" result="Passed" start-time="2026-09-21 12:24:01Z" end-time="2026-09-21 12:24:01Z" duration="0.007690" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1011" name="NullCardFails" fullname="Pupverse.Tests.BattleRulesTests.NullCardFails" methodname="NullCardFails" classname="Pupverse.Tests.BattleRulesTests" runstate="Runnable" seed="143935066" result="Passed" start-time="2026-09-21 12:24:01Z" end-time="2026-09-21 12:24:01Z" duration="0.000144" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1009" name="RoundResolvesOnceUntilReset" fullname="Pupverse.Tests.BattleRulesTests.RoundResolvesOnceUntilReset" methodname="RoundResolvesOnceUntilReset" classname="Pupverse.Tests.BattleRulesTests" runstate="Runnable" seed="34497080" result="Passed" start-time="2026-09-21 12:24:01Z" end-time="2026-09-21 12:24:01Z" duration="0.001777" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1012" name="StarterContentIsComplete" fullname="Pupverse.Tests.BattleRulesTests.StarterContentIsComplete" methodname="StarterContentIsComplete" classname="Pupverse.Tests.BattleRulesTests" runstate="Runnable" seed="2139448029" result="Passed" start-time="2026-09-21 12:24:01Z" end-time="2026-09-21 12:24:01Z" duration="0.000571" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1008" name="TieHasNoWinner" fullname="Pupverse.Tests.BattleRulesTests.TieHasNoWinner" methodname="TieHasNoWinner" classname="Pupverse.Tests.BattleRulesTests" runstate="Runnable" seed="525567428" result="Passed" start-time="2026-09-21 12:24:01Z" end-time="2026-09-21 12:24:01Z" duration="0.000072" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-suite type="ParameterizedMethod" id="1007" name="WebParity" fullname="Pupverse.Tests.BattleRulesTests.WebParity" classname="Pupverse.Tests.BattleRulesTests" runstate="Runnable" testcasecount="5" result="Passed" start-time="2026-09-21 12:24:01Z" end-time="2026-09-21 12:24:01Z" duration="0.001139" total="5" passed="5" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1002" name="WebParity(Power,109,95,Player)" fullname="Pupverse.Tests.BattleRulesTests.WebParity(Power,109,95,Player)" methodname="WebParity" classname="Pupverse.Tests.BattleRulesTests" runstate="Runnable" seed="1467994994" result="Passed" start-time="2026-09-21 12:24:01Z" end-time="2026-09-21 12:24:01Z" duration="0.000142" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1003" name="WebParity(Speed,82,102,Opponent)" fullname="Pupverse.Tests.BattleRulesTests.WebParity(Speed,82,102,Opponent)" methodname="WebParity" classname="Pupverse.Tests.BattleRulesTests" runstate="Runnable" seed="1402080466" result="Passed" start-time="2026-09-21 12:24:01Z" end-time="2026-09-21 12:24:01Z" duration="0.000051" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1004" name="WebParity(Intelligence,104,78,Player)" fullname="Pupverse.Tests.BattleRulesTests.WebParity(Intelligence,104,78,Player)" methodname="WebParity" classname="Pupverse.Tests.BattleRulesTests" runstate="Runnable" seed="374878363" result="Passed" start-time="2026-09-21 12:24:01Z" end-time="2026-09-21 12:24:01Z" duration="0.000047" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1005" name="WebParity(Defence,84,80,Player)" fullname="Pupverse.Tests.BattleRulesTests.WebParity(Defence,84,80,Player)" methodname="WebParity" classname="Pupverse.Tests.BattleRulesTests" runstate="Runnable" seed="726650244" result="Passed" start-time="2026-09-21 12:24:01Z" end-time="2026-09-21 12:24:01Z" duration="0.000047" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1006" name="WebParity(Luck,77,79,Opponent)" fullname="Pupverse.Tests.BattleRulesTests.WebParity(Luck,77,79,Opponent)" methodname="WebParity" classname="Pupverse.Tests.BattleRulesTests" runstate="Runnable" seed="1313425045" result="Passed" start-time="2026-09-21 12:24:01Z" end-time="2026-09-21 12:24:01Z" duration="0.000052" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+            </test-suite>
+          </test-suite>
+          <test-suite type="TestFixture" id="1013" name="SceneIntegrityTests" fullname="Pupverse.Tests.SceneIntegrityTests" classname="Pupverse.Tests.SceneIntegrityTests" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-09-21 12:24:01Z" end-time="2026-09-21 12:24:01Z" duration="0.044683" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-suite type="ParameterizedMethod" id="1016" name="SavedScenesRetainScriptsAndBindings" fullname="Pupverse.Tests.SceneIntegrityTests.SavedScenesRetainScriptsAndBindings" classname="Pupverse.Tests.SceneIntegrityTests" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-09-21 12:24:01Z" end-time="2026-09-21 12:24:01Z" duration="0.044517" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1014" name="SavedScenesRetainScriptsAndBindings(&quot;MainMenu&quot;)" fullname="Pupverse.Tests.SceneIntegrityTests.SavedScenesRetainScriptsAndBindings(&quot;MainMenu&quot;)" methodname="SavedScenesRetainScriptsAndBindings" classname="Pupverse.Tests.SceneIntegrityTests" runstate="Runnable" seed="877308295" result="Passed" start-time="2026-09-21 12:24:01Z" end-time="2026-09-21 12:24:01Z" duration="0.029871" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1015" name="SavedScenesRetainScriptsAndBindings(&quot;Battle&quot;)" fullname="Pupverse.Tests.SceneIntegrityTests.SavedScenesRetainScriptsAndBindings(&quot;Battle&quot;)" methodname="SavedScenesRetainScriptsAndBindings" classname="Pupverse.Tests.SceneIntegrityTests" runstate="Runnable" seed="1883805389" result="Passed" start-time="2026-09-21 12:24:01Z" end-time="2026-09-21 12:24:01Z" duration="0.014409" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+                <output><![CDATA[Saving results to: /Users/mcauleemaddison/Documents/Codex/2026-09-21/so-so-i-need-you-to/work/pupverse-final-tests.xml
+]]></output>
+              </test-case>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

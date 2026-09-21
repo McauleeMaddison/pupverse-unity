@@ -1,0 +1,24 @@
+{
+    "files.exclude": {
+        "**/*.meta": true,
+        "**/*.slnx": true,
+        "Library": true,
+        "Logs": true,
+        "Temp": true,
+        "Obj": true,
+        "UserSettings": true,
+        "Builds": true,
+        "TestResults": true
+    },
+    "search.exclude": {
+        "Library": true,
+        "Logs": true,
+        "Temp": true,
+        "Obj": true,
+        "Builds": true
+    },
+    "explorer.compactFolders": true,
+    "dotnet.defaultSolution": "Pupverse.slnx",
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true
+}

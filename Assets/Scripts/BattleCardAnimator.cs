@@ -26,9 +26,13 @@ namespace Pupverse
 
         Transform activeRoot;
         Vector3 startingLocalPosition;
+        BattleCardEffects effects;
+        CardStat activeStat;
+        bool abilityActive;
 
         public bool IsAttacking { get; private set; }
         public bool IsPlayerTurn { get; private set; } = true;
+        public int CompletedAttacks { get; private set; }
 
         IEnumerator Start()
         {
@@ -65,11 +69,13 @@ namespace Pupverse
 
         // Also callable from a UI Button or future turn controller; no input polling.
         [ContextMenu("Test Brooklyn Attack (Play Mode)")]
-        public void AttackPlayer() => BeginAttack(playerCardRoot);
+        public void AttackPlayer() => TryAttackPlayer(CardStat.Power);
+
+        public bool TryAttackPlayer(CardStat stat, bool boosted = false) => BeginAttack(playerCardRoot, stat, boosted);
 
         // Raven only attacks on an explicit command, never automatically.
         [ContextMenu("Test Raven Attack (Play Mode)")]
-        public void AttackRival() => BeginAttack(rivalCardRoot);
+        public void AttackRival() => BeginAttack(rivalCardRoot, CardStat.Power, false);
 
         public void ResetTurns()
         {
@@ -78,30 +84,33 @@ namespace Pupverse
             IsPlayerTurn = true;
         }
 
-        void BeginAttack(Transform root)
+        bool BeginAttack(Transform root, CardStat stat, bool boosted)
         {
-            if (!Application.isPlaying || !isActiveAndEnabled || IsAttacking) return;
+            if (!Application.isPlaying || !isActiveAndEnabled || IsAttacking) return false;
+            if (!System.Enum.IsDefined(typeof(CardStat), stat)) return false;
 
             if (root == null || battleCore == null)
             {
                 Debug.LogWarning("Assign the attacking card root and BattleCore before attacking.", this);
-                return;
+                return false;
             }
 
-            if (!root.gameObject.activeInHierarchy) return;
+            if (!root.gameObject.activeInHierarchy) return false;
             if (playerCardRoot == rivalCardRoot)
             {
                 Debug.LogWarning("Player and rival must have different card roots.", this);
-                return;
+                return false;
             }
-            if (root != (IsPlayerTurn ? playerCardRoot : rivalCardRoot)) return;
+            if (root != (IsPlayerTurn ? playerCardRoot : rivalCardRoot)) return false;
 
             // Battle3D's roots share the arena origin; the visible cards are offset children.
             // Use their combined renderer centre for aim, but only ever move the root.
             Vector3 direction = battleCore.position - GetCardCentre(root);
             direction.y = 0f;
             float distance = Mathf.Min(Mathf.Max(0f, attackDistance), direction.magnitude);
-            if (distance <= 0f) return;
+            if (distance <= 0f) return false;
+            if (stat == CardStat.Defence) distance *= 0.35f;
+            if (stat == CardStat.Intelligence) distance *= 0.6f;
 
             Vector3 targetWorldPosition = root.position + direction.normalized * distance;
             Vector3 targetLocalPosition = root.parent != null
@@ -111,8 +120,12 @@ namespace Pupverse
             activeRoot = root;
             startingLocalPosition = root.localPosition;
             previewPending = false;
+            activeStat = stat;
+            abilityActive = boosted;
+            effects = GetComponent<BattleCardEffects>();
             IsAttacking = true;
             StartCoroutine(Attack(root, targetLocalPosition));
+            return true;
         }
 
         static Vector3 GetCardCentre(Transform root)
@@ -128,23 +141,49 @@ namespace Pupverse
         IEnumerator Attack(Transform root, Vector3 target)
         {
             bool wasPlayerTurn = IsPlayerTurn;
-            yield return Move(root, startingLocalPosition, target, attackDuration);
-            if (centrePauseDuration > 0f) yield return new WaitForSeconds(centrePauseDuration);
-            yield return Move(root, target, startingLocalPosition, returnDuration);
+            float speed = activeStat == CardStat.Speed ? 0.45f : activeStat == CardStat.Intelligence ? 1.3f : 1f;
+            if (activeStat == CardStat.Power && !GameSettings.ReducedMotion)
+                yield return Move(root, startingLocalPosition, startingLocalPosition - (target - startingLocalPosition) * 0.12f, attackDuration * 0.4f, false);
+            if (root != null)
+                yield return Move(root, root.localPosition, target, attackDuration * speed, true);
+            float elapsed = 0f;
+            while (root != null && elapsed < centrePauseDuration)
+            {
+                elapsed += Time.deltaTime;
+                ShowEffect(root, Mathf.Clamp01(elapsed / centrePauseDuration));
+                yield return null;
+            }
+            yield return Move(root, target, startingLocalPosition, returnDuration * speed, false);
             bool completed = root != null;
             RestorePosition();
             // Change turns only after a completed return. Cancelling keeps the current turn.
-            if (completed) IsPlayerTurn = !wasPlayerTurn;
+            if (completed)
+            {
+                IsPlayerTurn = !wasPlayerTurn;
+                CompletedAttacks++;
+            }
         }
 
-        static IEnumerator Move(Transform root, Vector3 from, Vector3 to, float duration)
+        IEnumerator Move(Transform root, Vector3 from, Vector3 to, float duration, bool outward)
         {
             float elapsed = 0f;
             while (root != null && elapsed < duration)
             {
                 elapsed += Time.deltaTime;
-                float progress = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(elapsed / duration));
-                root.localPosition = Vector3.LerpUnclamped(from, to, progress);
+                float t = Mathf.Clamp01(elapsed / duration);
+                float progress = Mathf.SmoothStep(0f, 1f, t);
+                Vector3 offset = Vector3.zero;
+                if (outward && !GameSettings.ReducedMotion)
+                {
+                    float arc = Mathf.Sin(t * Mathf.PI);
+                    float height = activeStat == CardStat.Intelligence ? 0.5f : activeStat == CardStat.Luck ? 0.7f : activeStat == CardStat.Power ? 0.12f : 0f;
+                    offset = Vector3.up * (arc * height);
+                    if (activeStat == CardStat.Speed) offset.x = Mathf.Sin(t * Mathf.PI * 4f) * arc * 0.2f;
+                    if (activeStat == CardStat.Luck) offset.x = Mathf.Sin(t * Mathf.PI * 2f) * arc * 0.5f;
+                }
+                root.localPosition = Vector3.LerpUnclamped(from, to, progress) +
+                    (root.parent != null ? root.parent.InverseTransformVector(offset) : offset);
+                ShowEffect(root, t);
                 yield return null;
             }
 
@@ -153,9 +192,20 @@ namespace Pupverse
 
         void OnDisable()
         {
+            CancelAttack();
+        }
+
+        public void CancelAttack()
+        {
             previewPending = false;
             StopAllCoroutines();
             RestorePosition();
+        }
+
+        void ShowEffect(Transform root, float progress)
+        {
+            if (effects != null && battleCore != null)
+                effects.Show(activeStat, GetCardCentre(root), battleCore.position, progress, abilityActive);
         }
 
         void RestorePosition()
@@ -164,6 +214,7 @@ namespace Pupverse
             if (activeRoot != null) activeRoot.localPosition = startingLocalPosition;
             activeRoot = null;
             IsAttacking = false;
+            if (effects != null) effects.Clear();
         }
     }
 }

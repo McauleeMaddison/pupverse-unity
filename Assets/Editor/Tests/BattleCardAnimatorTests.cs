@@ -92,6 +92,74 @@ namespace Pupverse.Tests
         }
 
         [UnityTest]
+        public IEnumerator AllStatChoicesUseExistingRulesAndRestoreCards()
+        {
+            var brooklyn = AssetDatabase.LoadAssetAtPath<CardData>("Assets/Cards/Brooklyn.asset");
+            var raven = AssetDatabase.LoadAssetAtPath<CardData>("Assets/Cards/Raven.asset");
+            fixture.AddComponent<BattleCardEffects>();
+            var battle = fixture.AddComponent<Battle3DController>();
+            var settings = new SerializedObject(battle);
+            settings.FindProperty("animator").objectReferenceValue = animator;
+            settings.FindProperty("playerCard").objectReferenceValue = brooklyn;
+            settings.FindProperty("rivalCard").objectReferenceValue = raven;
+            settings.ApplyModifiedPropertiesWithoutUndo();
+            Vector3 rotation = player.localEulerAngles;
+            Vector3 scale = player.localScale;
+            Assert.That(battle.Choose((CardStat)99), Is.False);
+            for (int i = 0; i < 5; i++)
+            {
+                CardStat stat = (CardStat)i;
+                Assert.That(battle.Choose(stat), Is.True);
+                Assert.That(battle.Choose(stat), Is.False, "Cannot select a second attack during resolution.");
+                battle.NextRound();
+                Assert.That(battle.IsResolving, Is.True, "Cannot reset during an attack.");
+                bool effectVisible = false;
+                float deadline = Time.realtimeSinceStartup + 4f;
+                while (battle.IsResolving && Time.realtimeSinceStartup < deadline)
+                {
+                    foreach (var line in fixture.GetComponentsInChildren<LineRenderer>()) effectVisible |= line.enabled;
+                    Assert.That(rival.localPosition.Equals(rivalStart), Is.True);
+                    yield return null;
+                }
+                Assert.That(battle.IsResolving, Is.False);
+                Assert.That(effectVisible, Is.True, "Each stat must have a visible effect.");
+                Assert.That(battle.IsResolved, Is.True);
+                BattleResult expected = BattleRules.Resolve(brooklyn, raven, stat);
+                Assert.That(battle.Result.PlayerTotal, Is.EqualTo(expected.PlayerTotal));
+                Assert.That(battle.Result.OpponentTotal, Is.EqualTo(expected.OpponentTotal));
+                Assert.That(battle.Result.Winner, Is.EqualTo(expected.Winner));
+                Assert.That(battle.Result.Stat, Is.EqualTo(stat));
+                Assert.That(player.localPosition.Equals(playerStart), Is.True);
+                Assert.That(player.localEulerAngles.Equals(rotation), Is.True);
+                Assert.That(player.localScale.Equals(scale), Is.True);
+                foreach (var line in fixture.GetComponentsInChildren<LineRenderer>()) Assert.That(line.enabled, Is.False);
+                Assert.That(battle.Choose(stat), Is.False, "A resolved round must wait for Next round.");
+                battle.NextRound();
+                Assert.That(battle.IsResolved, Is.False);
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator CancelledStatAttackDoesNotResolveRound()
+        {
+            var battle = fixture.AddComponent<Battle3DController>();
+            var settings = new SerializedObject(battle);
+            settings.FindProperty("animator").objectReferenceValue = animator;
+            settings.FindProperty("playerCard").objectReferenceValue = AssetDatabase.LoadAssetAtPath<CardData>("Assets/Cards/Brooklyn.asset");
+            settings.FindProperty("rivalCard").objectReferenceValue = AssetDatabase.LoadAssetAtPath<CardData>("Assets/Cards/Raven.asset");
+            settings.ApplyModifiedPropertiesWithoutUndo();
+            Assert.That(battle.Choose(CardStat.Intelligence), Is.True);
+            yield return null;
+            battle.enabled = false;
+            Assert.That(battle.IsResolved, Is.False);
+            Assert.That(battle.IsResolving, Is.False);
+            Assert.That(player.localPosition.Equals(playerStart), Is.True);
+            Assert.That(animator.CompletedAttacks, Is.Zero);
+            battle.enabled = true;
+            Assert.That(battle.Choose(CardStat.Luck), Is.True);
+        }
+
+        [UnityTest]
         public IEnumerator DisableRestoresPositionWithoutConsumingTurn()
         {
             animator.AttackPlayer();

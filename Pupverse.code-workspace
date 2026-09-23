@@ -11,5 +11,8 @@
       "ms-dotnettools.csharp",
       "ms-dotnettools.csdevkit"
     ]
+  },
+  "settings": {
+    "files.autoSave": "off"
   }
 }

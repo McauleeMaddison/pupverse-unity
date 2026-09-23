@@ -10,6 +10,7 @@ namespace Pupverse.Editor
     {
         [MenuItem("Pupverse/Setup Brooklyn Attack Preview")]
         [MenuItem("Pupverse/Setup Battle Card Preview")]
+        [MenuItem("Pupverse/Setup Stat Battle")]
         public static void Setup()
         {
             Scene scene = SceneManager.GetActiveScene();
@@ -25,6 +26,13 @@ namespace Pupverse.Editor
             Transform rival = FindUnique(transforms, "RivalCardRoot");
             Transform core = FindUnique(transforms, "BattleCore");
             if (player == null || rival == null || core == null) return;
+            var playerData = AssetDatabase.LoadAssetAtPath<CardData>("Assets/Cards/Brooklyn.asset");
+            var rivalData = AssetDatabase.LoadAssetAtPath<CardData>("Assets/Cards/Raven.asset");
+            if (playerData == null || rivalData == null)
+            {
+                Debug.LogError("Brooklyn and Raven card data assets are required.");
+                return;
+            }
 
             var animators = scene.GetRootGameObjects()
                 .SelectMany(root => root.GetComponentsInChildren<BattleCardAnimator>(true)).ToArray();
@@ -48,13 +56,27 @@ namespace Pupverse.Editor
             settings.FindProperty("playerCardRoot").objectReferenceValue = player;
             settings.FindProperty("rivalCardRoot").objectReferenceValue = rival;
             settings.FindProperty("battleCore").objectReferenceValue = core;
-            settings.FindProperty("previewOnStart").boolValue = true;
-            settings.FindProperty("showAttackButton").boolValue = true;
+            settings.FindProperty("previewOnStart").boolValue = false;
+            settings.FindProperty("showAttackButton").boolValue = false;
             settings.ApplyModifiedProperties();
+            var effects = animator.GetComponent<BattleCardEffects>();
+            if (effects == null) effects = Undo.AddComponent<BattleCardEffects>(animator.gameObject);
+            var effectSettings = new SerializedObject(effects);
+            effectSettings.FindProperty("effectShader").objectReferenceValue = Shader.Find("Sprites/Default");
+            effectSettings.ApplyModifiedProperties();
+            var battle = animator.GetComponent<Battle3DController>();
+            if (battle == null) battle = Undo.AddComponent<Battle3DController>(animator.gameObject);
+            var battleSettings = new SerializedObject(battle);
+            battleSettings.FindProperty("animator").objectReferenceValue = animator;
+            battleSettings.FindProperty("playerCard").objectReferenceValue = playerData;
+            battleSettings.FindProperty("rivalCard").objectReferenceValue = rivalData;
+            var cameraTransform = FindUnique(transforms, "Main Camera");
+            if (cameraTransform != null) battleSettings.FindProperty("battleCamera").objectReferenceValue = cameraTransform.GetComponent<Camera>();
+            battleSettings.ApplyModifiedProperties();
             Selection.activeGameObject = animator.gameObject;
             EditorSceneManager.MarkSceneDirty(scene);
             if (EditorSceneManager.SaveScene(scene))
-                Debug.Log("Battle card preview connected and saved. Press Play for Brooklyn's preview, then alternate Attack Raven and Attack Brooklyn. Reset turns returns control to Brooklyn.", animator);
+                Debug.Log("Stat battle connected and saved. Press Play, choose a stat, then select Next round after the comparison.", animator);
         }
 
         static Transform FindUnique(Transform[] transforms, string objectName)

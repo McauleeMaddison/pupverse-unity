@@ -7,6 +7,7 @@ using UnityEngine;
 public sealed class RunBattleChecks : ICallbacks
 {
     static TestRunnerApi api;
+    static string ResultsDirectory => Path.Combine(Application.temporaryCachePath, "BattleChecks");
     static RunBattleChecks()
     {
         api = ScriptableObject.CreateInstance<TestRunnerApi>();
@@ -16,16 +17,17 @@ public sealed class RunBattleChecks : ICallbacks
     [MenuItem("Pupverse/Run Battle Checks (Temporary)")]
     public static void Run()
     {
-        File.WriteAllText("/private/tmp/pupverse-stats/test-status.txt", "Running");
+        Directory.CreateDirectory(ResultsDirectory);
+        File.WriteAllText(Path.Combine(ResultsDirectory, "test-status.txt"), "Running");
         api.Execute(new ExecutionSettings(new Filter { testMode = TestMode.EditMode,
-            groupNames = new[] { "^Pupverse.Tests.BattleCardAnimatorTests", "^Pupverse.Tests.BattleRulesTests" } }));
+            groupNames = new[] { "^Pupverse.Tests.BattleCardAnimatorTests", "^Pupverse.Tests.BattleRulesTests", "^Pupverse.Tests.BattleHudPresentationTests", "^Pupverse.Tests.SceneIntegrityTests" } }));
     }
     public void RunStarted(ITestAdaptor tests) { }
     public void TestStarted(ITestAdaptor test) { }
     public void TestFinished(ITestResultAdaptor result) { }
     public void RunFinished(ITestResultAdaptor result)
     {
-        TestRunnerApi.SaveResultToFile(result, "/private/tmp/pupverse-stats/test-results.xml");
-        File.WriteAllText("/private/tmp/pupverse-stats/test-status.txt", result.ResultState + " passed=" + result.PassCount + " failed=" + result.FailCount);
+        TestRunnerApi.SaveResultToFile(result, Path.Combine(ResultsDirectory, "test-results.xml"));
+        File.WriteAllText(Path.Combine(ResultsDirectory, "test-status.txt"), result.ResultState + " passed=" + result.PassCount + " failed=" + result.FailCount);
     }
 }

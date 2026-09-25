@@ -3,6 +3,7 @@ using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.TestTools;
+using UnityEngine.UI;
 
 namespace Pupverse.Tests
 {
@@ -91,72 +92,130 @@ namespace Pupverse.Tests
             Assert.That(animator.IsPlayerTurn, Is.True);
         }
 
-        [UnityTest]
-        public IEnumerator AllStatChoicesUseExistingRulesAndRestoreCards()
+        BattleController MakeBattle()
         {
-            var brooklyn = AssetDatabase.LoadAssetAtPath<CardData>("Assets/Cards/Brooklyn.asset");
-            var raven = AssetDatabase.LoadAssetAtPath<CardData>("Assets/Cards/Raven.asset");
-            fixture.AddComponent<BattleCardEffects>();
-            var battle = fixture.AddComponent<Battle3DController>();
-            var settings = new SerializedObject(battle);
-            settings.FindProperty("animator").objectReferenceValue = animator;
-            settings.FindProperty("playerCard").objectReferenceValue = brooklyn;
-            settings.FindProperty("rivalCard").objectReferenceValue = raven;
-            settings.ApplyModifiedPropertiesWithoutUndo();
-            Vector3 rotation = player.localEulerAngles;
-            Vector3 scale = player.localScale;
-            Assert.That(battle.Choose((CardStat)99), Is.False);
+            var go = new GameObject("Round controller");
+            go.transform.SetParent(fixture.transform);
+            go.SetActive(false);
+            var battle = go.AddComponent<BattleController>();
+            var p = new GameObject("Player data"); p.transform.SetParent(go.transform); p.SetActive(false);
+            var r = new GameObject("Rival data"); r.transform.SetParent(go.transform); r.SetActive(false);
+            battle.playerCard = p.AddComponent<CardView>();
+            battle.opponentCard = r.AddComponent<CardView>();
+            battle.playerCard.data = AssetDatabase.LoadAssetAtPath<CardData>("Assets/Cards/Brooklyn.asset");
+            battle.opponentCard.data = AssetDatabase.LoadAssetAtPath<CardData>("Assets/Cards/Raven.asset");
+            battle.resultTitle = MakeText(go.transform);
+            battle.resultDetail = MakeText(go.transform);
+            battle.scoreLabel = MakeText(go.transform);
+            battle.statButtons = new Button[5];
+            battle.statBindings = new BattleController.StatButtonBinding[5];
             for (int i = 0; i < 5; i++)
             {
-                CardStat stat = (CardStat)i;
-                Assert.That(battle.Choose(stat), Is.True);
-                Assert.That(battle.Choose(stat), Is.False, "Cannot select a second attack during resolution.");
-                battle.NextRound();
-                Assert.That(battle.IsResolving, Is.True, "Cannot reset during an attack.");
-                bool effectVisible = false;
-                float deadline = Time.realtimeSinceStartup + 4f;
-                while (battle.IsResolving && Time.realtimeSinceStartup < deadline)
-                {
-                    foreach (var line in fixture.GetComponentsInChildren<LineRenderer>()) effectVisible |= line.enabled;
-                    Assert.That(rival.localPosition.Equals(rivalStart), Is.True);
-                    yield return null;
-                }
-                Assert.That(battle.IsResolving, Is.False);
-                Assert.That(effectVisible, Is.True, "Each stat must have a visible effect.");
-                Assert.That(battle.IsResolved, Is.True);
-                BattleResult expected = BattleRules.Resolve(brooklyn, raven, stat);
-                Assert.That(battle.Result.PlayerTotal, Is.EqualTo(expected.PlayerTotal));
-                Assert.That(battle.Result.OpponentTotal, Is.EqualTo(expected.OpponentTotal));
-                Assert.That(battle.Result.Winner, Is.EqualTo(expected.Winner));
-                Assert.That(battle.Result.Stat, Is.EqualTo(stat));
-                Assert.That(player.localPosition.Equals(playerStart), Is.True);
-                Assert.That(player.localEulerAngles.Equals(rotation), Is.True);
-                Assert.That(player.localScale.Equals(scale), Is.True);
-                foreach (var line in fixture.GetComponentsInChildren<LineRenderer>()) Assert.That(line.enabled, Is.False);
-                Assert.That(battle.Choose(stat), Is.False, "A resolved round must wait for Next round.");
-                battle.NextRound();
-                Assert.That(battle.IsResolved, Is.False);
+                var button = new GameObject("Stat " + i, typeof(RectTransform), typeof(Image), typeof(Button));
+                button.transform.SetParent(go.transform);
+                MakeText(button.transform);
+                battle.statButtons[i] = button.GetComponent<Button>();
+                // Deliberately reverse Inspector bindings to verify explicit stat mapping.
+                battle.statBindings[4-i] = new BattleController.StatButtonBinding { stat = (CardStat)i, button = battle.statButtons[i] };
             }
+            battle.cardAnimator = animator;
+            battle.comparisonDuration = .06f;
+            battle.winnerReadDuration = .06f;
+            battle.resultHoldDuration = .06f;
+            go.SetActive(true);
+            return battle;
+        }
+
+        static Text MakeText(Transform parent)
+        {
+            var go = new GameObject("Text", typeof(RectTransform), typeof(Text));
+            go.transform.SetParent(parent);
+            return go.GetComponent<Text>();
         }
 
         [UnityTest]
-        public IEnumerator CancelledStatAttackDoesNotResolveRound()
+        public IEnumerator AllStatsResolveBeforeOnlyWinnerMoves()
         {
-            var battle = fixture.AddComponent<Battle3DController>();
-            var settings = new SerializedObject(battle);
-            settings.FindProperty("animator").objectReferenceValue = animator;
-            settings.FindProperty("playerCard").objectReferenceValue = AssetDatabase.LoadAssetAtPath<CardData>("Assets/Cards/Brooklyn.asset");
-            settings.FindProperty("rivalCard").objectReferenceValue = AssetDatabase.LoadAssetAtPath<CardData>("Assets/Cards/Raven.asset");
-            settings.ApplyModifiedPropertiesWithoutUndo();
-            Assert.That(battle.Choose(CardStat.Intelligence), Is.True);
-            yield return null;
-            battle.enabled = false;
-            Assert.That(battle.IsResolved, Is.False);
+            fixture.AddComponent<BattleCardEffects>();
+            var battle = MakeBattle();
+            for (int i = 0; i < 5; i++)
+            {
+                CardStat stat = (CardStat)i;
+                Assert.That(battle.statButtons[i].GetComponentInChildren<Text>().text, Does.Contain(battle.playerCard.data.EffectiveValue(stat).ToString()));
+                Assert.That(battle.resultDetail.text, Does.Not.Contain("Raven:"), "Hide the rival total before choosing.");
+                battle.statButtons[i].onClick.Invoke();
+                var expected = BattleRules.Resolve(battle.playerCard.data, battle.opponentCard.data, stat);
+                Assert.That(battle.IsResolved, Is.True);
+                Assert.That(battle.Result.Stat, Is.EqualTo(stat));
+                Assert.That(battle.Result.PlayerTotal, Is.EqualTo(expected.PlayerTotal));
+                Assert.That(battle.Result.OpponentTotal, Is.EqualTo(expected.OpponentTotal));
+                Assert.That(animator.IsAttacking, Is.False, "The result must be shown before movement.");
+                battle.Choose((CardStat)((i + 1) % 5));
+                Assert.That(battle.Result.Stat, Is.EqualTo(stat), "Repeated taps cannot replace a result.");
+                bool moved = false;
+                float deadline = Time.realtimeSinceStartup + 4f;
+                while (battle.IsResolving && Time.realtimeSinceStartup < deadline)
+                {
+                    if (expected.Winner == BattleWinner.Player)
+                    {
+                        Assert.That(rival.localPosition.Equals(rivalStart), Is.True);
+                        moved |= !player.localPosition.Equals(playerStart);
+                    }
+                    else
+                    {
+                        Assert.That(player.localPosition.Equals(playerStart), Is.True);
+                        moved |= !rival.localPosition.Equals(rivalStart);
+                    }
+                    if (animator.IsAttacking) Assert.That(battle.resultTitle.text, Does.Contain("WINS"));
+                    yield return null;
+                }
+                Assert.That(battle.IsResolving, Is.False);
+                Assert.That(moved, Is.True);
+                Assert.That(battle.resultTitle.text, Is.EqualTo((expected.Winner == BattleWinner.Player ? "BROOKLYN" : "RAVEN") + " WINS"));
+                Assert.That(player.localPosition.Equals(playerStart), Is.True);
+                Assert.That(rival.localPosition.Equals(rivalStart), Is.True);
+                battle.Replay();
+            }
+            Assert.That(battle.Wins, Is.EqualTo(2));
+            Assert.That(battle.Losses, Is.EqualTo(3));
+            Assert.That(battle.Draws, Is.Zero);
+        }
+
+        [UnityTest]
+        public IEnumerator DrawDoesNotAnimateAndAutomaticNextRoundUnlocksButtons()
+        {
+            var battle = MakeBattle();
+            battle.autoNextRound = true;
+            // Reuse the same real card data for both sides to exercise a draw without editing assets.
+            battle.opponentCard.data = battle.playerCard.data;
+            battle.Choose(CardStat.Speed);
+            float deadline = Time.realtimeSinceStartup + 3f;
+            while (battle.IsResolving && Time.realtimeSinceStartup < deadline)
+            {
+                Assert.That(animator.IsAttacking, Is.False);
+                yield return null;
+            }
             Assert.That(battle.IsResolving, Is.False);
-            Assert.That(player.localPosition.Equals(playerStart), Is.True);
+            Assert.That(battle.Draws, Is.EqualTo(1));
+            Assert.That(battle.IsResolved, Is.False);
             Assert.That(animator.CompletedAttacks, Is.Zero);
-            battle.enabled = true;
-            Assert.That(battle.Choose(CardStat.Luck), Is.True);
+            foreach (var button in battle.statButtons) Assert.That(button.interactable, Is.True);
+        }
+
+        [UnityTest]
+        public IEnumerator DisablingBattleRestoresWinningCardAndClearsLock()
+        {
+            var battle = MakeBattle();
+            battle.Choose(CardStat.Power);
+            float deadline = Time.realtimeSinceStartup + 3f;
+            while (!animator.IsAttacking && Time.realtimeSinceStartup < deadline) yield return null;
+            Assert.That(animator.IsAttacking, Is.True);
+            battle.enabled = false;
+            Assert.That(battle.IsResolving, Is.False);
+            Assert.That(battle.IsResolved, Is.False);
+            Assert.That(animator.IsAttacking, Is.False);
+            Assert.That(player.localPosition.Equals(playerStart), Is.True);
+            Assert.That(rival.localPosition.Equals(rivalStart), Is.True);
         }
 
         [UnityTest]

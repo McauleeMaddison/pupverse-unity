@@ -73,6 +73,14 @@ namespace Pupverse
 
         public bool TryAttackPlayer(CardStat stat, bool boosted = false) => BeginAttack(playerCardRoot, stat, boosted);
 
+        // Gameplay supplies the resolved winner; preview turn order has no authority here.
+        public bool PlayWinner(BattleWinner winner, CardStat stat, bool boosted = false)
+        {
+            if (winner == BattleWinner.Draw) return false;
+            if (winner != BattleWinner.Player && winner != BattleWinner.Opponent) return false;
+            return BeginAttack(winner == BattleWinner.Player ? playerCardRoot : rivalCardRoot, stat, boosted, true);
+        }
+
         // Raven only attacks on an explicit command, never automatically.
         [ContextMenu("Test Raven Attack (Play Mode)")]
         public void AttackRival() => BeginAttack(rivalCardRoot, CardStat.Power, false);
@@ -84,7 +92,7 @@ namespace Pupverse
             IsPlayerTurn = true;
         }
 
-        bool BeginAttack(Transform root, CardStat stat, bool boosted)
+        bool BeginAttack(Transform root, CardStat stat, bool boosted, bool ignorePreviewTurn = false)
         {
             if (!Application.isPlaying || !isActiveAndEnabled || IsAttacking) return false;
             if (!System.Enum.IsDefined(typeof(CardStat), stat)) return false;
@@ -101,7 +109,7 @@ namespace Pupverse
                 Debug.LogWarning("Player and rival must have different card roots.", this);
                 return false;
             }
-            if (root != (IsPlayerTurn ? playerCardRoot : rivalCardRoot)) return false;
+            if (!ignorePreviewTurn && root != (IsPlayerTurn ? playerCardRoot : rivalCardRoot)) return false;
 
             // Battle3D's roots share the arena origin; the visible cards are offset children.
             // Use their combined renderer centre for aim, but only ever move the root.

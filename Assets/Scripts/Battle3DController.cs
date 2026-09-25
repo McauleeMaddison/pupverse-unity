@@ -1,161 +1,137 @@
-using System;
-using System.Collections;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Pupverse
 {
+    // Canvas and viewport layout only. BattleController owns rules and round sequencing.
     [DisallowMultipleComponent]
+    [DefaultExecutionOrder(-10)]
     public sealed class Battle3DController : MonoBehaviour
     {
-        [SerializeField] BattleCardAnimator animator = null;
-        [SerializeField] CardData playerCard = null;
-        [SerializeField] CardData rivalCard = null;
-        [SerializeField] Camera battleCamera = null;
-        Rect originalCameraRect;
+        public BattleController battleController;
+        public RectTransform controlsRoot;
+        public Text instruction;
+        public Camera battleCamera;
+        Rect originalViewport;
+        Matrix4x4 originalProjection;
         bool ownsViewport;
-        readonly BattleRound round = new BattleRound();
-        CardStat selectedStat;
+        Canvas canvas;
+        CanvasScaler scaler;
+        readonly RectTransform[] viewportMatte = new RectTransform[4];
+        RectTransform matteRoot;
+        Rect previousSafeArea;
+        Vector2 previousScreen;
+        public PhoneLayout CurrentLayout { get; private set; }
 
-        public bool IsResolving { get; private set; }
-        public bool IsResolved => round.IsResolved;
-        public BattleResult Result => round.Result;
-        public bool IsReady => animator != null && animator.isActiveAndEnabled && playerCard != null && rivalCard != null;
-
-        public bool Choose(CardStat stat)
+        // Units are scaled to the safe width (390), not the full width behind a notch.
+        public readonly struct PhoneLayout
         {
-            if (!Application.isPlaying || !isActiveAndEnabled || !IsReady || IsResolving || IsResolved || animator.IsAttacking) return false;
-            if (!Enum.IsDefined(typeof(CardStat), stat)) return false;
-            animator.ResetTurns();
-            int completedBefore = animator.CompletedAttacks;
-            if (!animator.TryAttackPlayer(stat, playerCard.abilityBoosts.Get(stat) > 0)) return false;
-            selectedStat = stat;
-            IsResolving = true;
-            StartCoroutine(ResolveAfterAttack(stat, completedBefore));
-            return true;
+            public readonly Vector2 SafeSize;
+            public readonly bool Portrait;
+            public readonly float Height, TileHeight, ArenaReserve;
+            public PhoneLayout(Vector2 safeSize)
+            {
+                SafeSize=safeSize;
+                Portrait=safeSize.y>=safeSize.x;
+                Height=Portrait?Mathf.Clamp(safeSize.y*.44f,320,338):208;
+                TileHeight=Portrait?(Height-152)/3:62;
+                ArenaReserve=Portrait?Height-116:100;
+            }
+            public Rect StatRect(int i)
+            {
+                float width=Portrait?(SafeSize.x-40)/2:(SafeSize.x-64)/5;
+                return new Rect(16+(Portrait?i%2:i)*(width+8),
+                    Portrait?32+(2-i/2)*(TileHeight+8):32,
+                    Portrait&&i==4?SafeSize.x-32:width,TileHeight);
+            }
+            public Rect ComparisonRect => new Rect(16,Height-96,SafeSize.x-32,64);
         }
-
-        IEnumerator ResolveAfterAttack(CardStat stat, int completedBefore)
-        {
-            while (animator != null && animator.IsAttacking) yield return null;
-            if (animator != null && animator.CompletedAttacks > completedBefore)
-                round.TryResolve(playerCard, rivalCard, stat);
-            IsResolving = false;
-        }
-
-        public void NextRound()
-        {
-            if (IsResolving || (animator != null && animator.IsAttacking)) return;
-            round.Reset();
-            if (animator != null) animator.ResetTurns();
-        }
-
-        void OnDisable()
-        {
-            StopAllCoroutines();
-            if (IsResolving && animator != null) animator.CancelAttack();
-            IsResolving = false;
-            if (ownsViewport && battleCamera != null) battleCamera.rect = originalCameraRect;
-            ownsViewport = false;
-        }
-
-        // Layout uses phone-width logical units so touch targets remain large in portrait.
-        public static float LayoutScale(Rect safe, bool portrait) =>
-            Mathf.Max(0.1f, portrait ? safe.width / 420f : Mathf.Min(safe.width / 900f, safe.height / 540f));
 
         void LateUpdate()
         {
-            if (battleCamera == null || Screen.width == 0 || Screen.height == 0) return;
-            if (!ownsViewport)
+            if(controlsRoot==null || battleController==null) return;
+            if(canvas==null) { canvas=controlsRoot.GetComponentInParent<Canvas>(); if(canvas!=null) scaler=canvas.GetComponent<CanvasScaler>(); }
+            if(canvas==null) return;
+            if(matteRoot==null) BuildMatte();
+            Rect safe=Screen.safeArea;
+            if(safe.width<=0 || safe.height<=0 || Screen.width<=0 || Screen.height<=0) return;
+            bool portrait=safe.height>=safe.width;
+            if(safe!=previousSafeArea || previousScreen!=new Vector2(Screen.width,Screen.height))
             {
-                originalCameraRect = battleCamera.rect;
-                ownsViewport = true;
-            }
-            Rect safe = Screen.safeArea;
-            bool portrait = safe.height > safe.width;
-            float panelHeight = (portrait ? 304f : 188f) * LayoutScale(safe, portrait);
-            // Reserve the controls' space without changing the camera or arena transforms.
-            battleCamera.rect = new Rect(safe.x / Screen.width, (safe.y + panelHeight) / Screen.height,
-                safe.width / Screen.width, Mathf.Max(1f, safe.height - panelHeight) / Screen.height);
-        }
-
-        // Mouse/touch events come from Unity GUI; no Input Manager polling or hover controls.
-        void OnGUI()
-        {
-            Matrix4x4 previousMatrix = GUI.matrix;
-            bool previousEnabled = GUI.enabled;
-            Color previousBackground = GUI.backgroundColor;
-            Color previousColor = GUI.color;
-            Rect safe = Screen.safeArea;
-            bool portrait = safe.height > safe.width;
-            float scale = LayoutScale(safe, portrait);
-            GUI.matrix = Matrix4x4.Scale(Vector3.one * scale);
-            float width = safe.width / scale - 24f;
-            float left = safe.x / scale + 12f;
-            float panelHeight = portrait ? 304f : 188f;
-            float top = (Screen.height - safe.y) / scale - panelHeight;
-            GUI.color = new Color(0.025f, 0.04f, 0.10f, 0.98f);
-            GUI.DrawTexture(new Rect(left - 12f, top, width + 24f, panelHeight), Texture2D.whiteTexture);
-            GUI.color = Color.white;
-            var label = new GUIStyle(GUI.skin.label) { fontSize = portrait ? 15 : 18, alignment = TextAnchor.MiddleCenter, wordWrap = true };
-            var titleStyle = new GUIStyle(label) { fontSize = 20, fontStyle = FontStyle.Bold };
-            var button = new GUIStyle(GUI.skin.button) { fontSize = 18, fontStyle = FontStyle.Bold, wordWrap = true,
-                border = new RectOffset(), padding = new RectOffset(6, 6, 3, 3) };
-            foreach (var state in new[] { button.normal, button.hover, button.active, button.focused })
-            {
-                state.background = Texture2D.whiteTexture;
-                state.textColor = new Color(0.025f, 0.04f, 0.1f);
-            }
-            if (!IsReady)
-            {
-                GUI.Label(new Rect(left, top, width, panelHeight), "Connect both cards to start the battle.", label);
-            }
-            else
-            {
-                string title = IsResolving ? selectedStat + " attack" : "Choose your stat";
-                if (IsResolved) title = Result.Winner == BattleWinner.Draw ? "Draw" :
-                    (Result.Winner == BattleWinner.Player ? playerCard.displayName : rivalCard.displayName) + " wins";
-                GUI.Label(new Rect(left, top + 6f, width, 28f), title, titleStyle);
-                if (!IsResolved)
+                previousSafeArea=safe; previousScreen=new Vector2(Screen.width,Screen.height);
+                if(scaler!=null)
                 {
-                    float buttonWidth = portrait ? (width - 8f) * 0.5f : (width - 32f) / 5f;
-                    for (int i = 0; i < 5; i++)
-                    {
-                        CardStat stat = (CardStat)i;
-                        int bonus = playerCard.abilityBoosts.Get(stat);
-                        string value = playerCard.stats.Get(stat) + (bonus > 0 ? " + " + bonus : "");
-                        float x = left + (portrait ? i % 2 : i) * (buttonWidth + 8f);
-                        float y = top + 40f + (portrait ? i / 2 : 0) * 58f;
-                        float w = portrait && i == 4 ? width : buttonWidth;
-                        GUI.backgroundColor = BattleCardEffects.StatColor(stat);
-                        GUI.enabled = previousEnabled && !IsResolving && !animator.IsAttacking;
-                        if (GUI.Button(new Rect(x, y, w, 50f), stat + "  " + value, button)) Choose(stat);
-                    }
-                    GUI.enabled = previousEnabled;
-                    GUI.backgroundColor = previousBackground;
-                    string abilities = IsResolving ? AbilityLine(playerCard, selectedStat) + "\n" + AbilityLine(rivalCard, selectedStat) :
-                        playerCard.displayName + " · " + playerCard.abilityName + "\n" + playerCard.abilityDescription;
-                    GUI.Label(new Rect(left, top + (portrait ? 214f : 96f), width, 80f), abilities, label);
-                }
-                else
-                {
-                    string totals = Result.Stat + " · Base + ability bonus\n" + playerCard.displayName + " " + Result.PlayerBase + " + " + Result.PlayerBoost + " = " + Result.PlayerTotal +
-                        "   |   " + rivalCard.displayName + " " + Result.OpponentBase + " + " + Result.OpponentBoost + " = " + Result.OpponentTotal;
-                    GUI.Label(new Rect(left, top + 36f, width, portrait ? 68f : 44f), totals, label);
-                    GUI.Label(new Rect(left, top + (portrait ? 114f : 80f), width, 52f), AbilityLine(playerCard, Result.Stat) + "\n" + AbilityLine(rivalCard, Result.Stat), label);
-                    GUI.backgroundColor = BattleCardEffects.StatColor(CardStat.Speed);
-                    if (GUI.Button(new Rect(left, top + panelHeight - 62f, width, 50f), "Next round", button)) NextRound();
+                    scaler.referenceResolution=portrait?new Vector2(390*Screen.width/safe.width,844):new Vector2(844,390*Screen.height/safe.height);
+                    scaler.matchWidthOrHeight=portrait?0:1;
                 }
             }
-            GUI.backgroundColor = previousBackground;
-            GUI.color = previousColor;
-            GUI.enabled = previousEnabled;
-            GUI.matrix = previousMatrix;
+            var parent=controlsRoot.parent as RectTransform;
+            CurrentLayout=new PhoneLayout(parent.rect.size);
+            float height=CurrentLayout.Height, width=CurrentLayout.SafeSize.x;
+            controlsRoot.anchorMin=Vector2.zero; controlsRoot.anchorMax=Vector2.right;
+            controlsRoot.pivot=new Vector2(.5f,0); controlsRoot.anchoredPosition=Vector2.zero;
+            controlsRoot.sizeDelta=new Vector2(0,height);
+            Place(battleController.resultPanel.rectTransform,16,height-62,width-32,62);
+            Place(battleController.resultTitle.rectTransform,0,34,width-32,26);
+            Place(battleController.resultDetail.rectTransform,0,7,width-32,22);
+            for(int i=0;i<5;i++)
+            {
+                Rect r=CurrentLayout.StatRect(i);
+                Place((RectTransform)battleController.statButtons[i].transform,r.x,r.y,r.width,r.height);
+            }
+            Place(battleController.scoreLabel.rectTransform,16,6,145,16);
+            battleController.scoreLabel.alignment=TextAnchor.MiddleLeft;
+            if(battleCamera==null) return;
+            if(!ownsViewport)
+            {
+                originalViewport=battleCamera.rect;
+                originalProjection=battleCamera.projectionMatrix;
+                ownsViewport=true;
+            }
+            battleCamera.rect=new Rect(safe.x/Screen.width,safe.y/Screen.height,safe.width/Screen.width,safe.height/Screen.height);
+            float reserve=Mathf.Min(CurrentLayout.ArenaReserve*canvas.scaleFactor,safe.height*.55f);
+            battleCamera.projectionMatrix=ExtendArenaProjection(battleCamera.fieldOfView,safe.size,reserve,battleCamera.nearClipPlane,battleCamera.farClipPlane);
+            // Only the areas outside the phone safe area need opaque clearing now.
+            Rect v=battleCamera.rect;
+            Vector2 size=((RectTransform)canvas.transform).rect.size;
+            Place(viewportMatte[0],0,0,size.x,v.yMin*size.y);
+            Place(viewportMatte[1],0,v.yMax*size.y,size.x,(1-v.yMax)*size.y);
+            Place(viewportMatte[2],0,v.yMin*size.y,v.xMin*size.x,v.height*size.y);
+            Place(viewportMatte[3],v.xMax*size.x,v.yMin*size.y,(1-v.xMax)*size.x,v.height*size.y);
         }
-
-        static string AbilityLine(CardData card, CardStat stat)
+        // Preserve the upper arena's framing while rendering extra floor beneath the glass HUD.
+        // This changes the runtime projection only, never the camera or arena transforms.
+        public static Matrix4x4 ExtendArenaProjection(float fieldOfView,Vector2 size,float reserve,float near,float far)
         {
-            int bonus = card.abilityBoosts.Get(stat);
-            return card.displayName + ": " + (bonus > 0 ? card.abilityName + " +" + bonus + " " + stat : "no " + stat + " bonus");
+            float visibleHeight=Mathf.Max(1,size.y-reserve);
+            Matrix4x4 matrix=Matrix4x4.Perspective(fieldOfView,size.x/visibleHeight,near,far);
+            float fraction=visibleHeight/size.y;
+            matrix.SetRow(1,matrix.GetRow(1)*fraction+matrix.GetRow(3)*(1-fraction));
+            return matrix;
+        }
+        void BuildMatte()
+        {
+            matteRoot=new GameObject("Viewport matte",typeof(RectTransform)).GetComponent<RectTransform>();
+            matteRoot.SetParent(canvas.transform,false); matteRoot.SetAsFirstSibling();
+            matteRoot.anchorMin=Vector2.zero; matteRoot.anchorMax=Vector2.one;
+            matteRoot.offsetMin=matteRoot.offsetMax=Vector2.zero;
+            for(int i=0;i<4;i++)
+            {
+                var go=new GameObject("Outside arena "+i,typeof(RectTransform),typeof(CanvasRenderer),typeof(Image));
+                viewportMatte[i]=(RectTransform)go.transform; viewportMatte[i].SetParent(matteRoot,false);
+                var image=go.GetComponent<Image>(); image.color=new Color(.025f,.045f,.10f,1); image.raycastTarget=false;
+            }
+        }
+        public static void Place(RectTransform rect,float x,float y,float width,float height)
+        {
+            rect.anchorMin=rect.anchorMax=Vector2.zero; rect.pivot=Vector2.zero;
+            rect.anchoredPosition=new Vector2(x,y); rect.sizeDelta=new Vector2(width,height);
+        }
+        void OnDisable()
+        {
+            if(ownsViewport && battleCamera!=null) { battleCamera.rect=originalViewport; battleCamera.projectionMatrix=originalProjection; }
+            ownsViewport=false;
+            if(matteRoot!=null) Destroy(matteRoot.gameObject);
         }
     }
 }

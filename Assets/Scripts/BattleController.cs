@@ -31,8 +31,11 @@ namespace Pupverse
         [Header("3D Battle Animation")]
         public BattleCardAnimator cardAnimator;
 
-        readonly BattleRound round =
-            new BattleRound();
+        [Header("Battle Timing")]
+        [Min(0f)]
+        public float comparisonDuration = 0.55f;
+
+        readonly BattleRound round = new BattleRound();
 
         int wins;
         int losses;
@@ -40,68 +43,42 @@ namespace Pupverse
 
         Coroutine resolution;
 
-        public bool IsResolved =>
-            round.IsResolved;
+        public bool IsResolved => round.IsResolved;
 
         void Awake()
         {
             GameSettings.Initialize();
 
-            for (
-                int i = 0;
-                i < statButtons.Length;
-                i++
-            )
+            for (int i = 0; i < statButtons.Length; i++)
             {
                 int index = i;
 
-                statButtons[i]
-                    .onClick
-                    .AddListener(
-                        () =>
-                        {
-                            Choose(
-                                (CardStat)index
-                            );
-                        }
-                    );
+                if (statButtons[i] == null)
+                    continue;
+
+                statButtons[i].onClick.AddListener(
+                    () => Choose((CardStat)index)
+                );
             }
 
             if (replayButton != null)
             {
-                replayButton
-                    .onClick
-                    .AddListener(
-                        Replay
-                    );
+                replayButton.onClick.AddListener(Replay);
             }
 
             if (homeButton != null)
             {
-                homeButton
-                    .onClick
-                    .AddListener(
-                        () =>
-                        {
-                            SceneManager
-                                .LoadSceneAsync(
-                                    "MainMenu"
-                                );
-                        }
-                    );
+                homeButton.onClick.AddListener(
+                    () => SceneManager.LoadSceneAsync("MainMenu")
+                );
             }
 
             ResetUI();
         }
 
-        public void Choose(
-            CardStat stat
-        )
+        public void Choose(CardStat stat)
         {
-            if (
-                playerCard == null ||
-                opponentCard == null
-            )
+            if (playerCard == null || opponentCard == null)
             {
                 Debug.LogWarning(
                     "BattleController is missing a CardView reference.",
@@ -111,10 +88,7 @@ namespace Pupverse
                 return;
             }
 
-            if (
-                playerCard.data == null ||
-                opponentCard.data == null
-            )
+            if (playerCard.data == null || opponentCard.data == null)
             {
                 Debug.LogWarning(
                     "BattleController cards are missing CardData.",
@@ -124,76 +98,50 @@ namespace Pupverse
                 return;
             }
 
-            if (
-                !round.TryResolve(
+            if (!round.TryResolve(
                     playerCard.data,
                     opponentCard.data,
                     stat
-                )
-            )
+                ))
             {
                 return;
             }
 
-            foreach (
-                var button in statButtons
-            )
+            foreach (Button button in statButtons)
             {
                 if (button != null)
-                    button.interactable =
-                        false;
+                    button.interactable = false;
             }
 
             if (replayButton != null)
-            {
-                replayButton.interactable =
-                    false;
-            }
+                replayButton.interactable = false;
 
-            resolution =
-                StartCoroutine(
-                    ShowResult(
-                        round.Result
-                    )
-                );
+            resolution = StartCoroutine(
+                ShowResult(round.Result)
+            );
         }
 
-        IEnumerator ShowResult(
-            BattleResult result
-        )
+        IEnumerator ShowResult(BattleResult result)
         {
             string playerName =
                 playerCard.data != null &&
-                !string.IsNullOrWhiteSpace(
-                    playerCard.data.displayName
-                )
-                    ? playerCard
-                        .data
-                        .displayName
+                !string.IsNullOrWhiteSpace(playerCard.data.displayName)
+                    ? playerCard.data.displayName
                     : "PLAYER";
 
             string opponentName =
                 opponentCard.data != null &&
-                !string.IsNullOrWhiteSpace(
-                    opponentCard
-                        .data
-                        .displayName
-                )
-                    ? opponentCard
-                        .data
-                        .displayName
+                !string.IsNullOrWhiteSpace(opponentCard.data.displayName)
+                    ? opponentCard.data.displayName
                     : "OPPONENT";
 
             string statName =
-                result.Stat
-                    .ToString()
-                    .ToUpperInvariant();
+                result.Stat.ToString().ToUpperInvariant();
 
             if (resultTitle != null)
             {
                 resultTitle.text =
-                    "COMPARING " +
-                    statName;
+                    "COMPARING " + statName;
             }
 
             if (resultDetail != null)
@@ -216,20 +164,18 @@ namespace Pupverse
                     result.OpponentTotal;
             }
 
-            yield return
-                new WaitForSecondsRealtime(
-                    GameSettings.ReducedMotion
-                        ? 0.05f
-                        : 0.55f
-                );
+            float delay =
+                GameSettings.ReducedMotion
+                    ? 0.05f
+                    : comparisonDuration;
+
+            yield return new WaitForSecondsRealtime(delay);
 
             bool won =
-                result.Winner ==
-                BattleWinner.Player;
+                result.Winner == BattleWinner.Player;
 
             bool draw =
-                result.Winner ==
-                BattleWinner.Draw;
+                result.Winner == BattleWinner.Draw;
 
             if (won)
             {
@@ -257,15 +203,10 @@ namespace Pupverse
                     draw
                         ? "A PERFECT TIE"
                         : won
-                            ? playerName
-                                  .ToUpperInvariant() +
-                              " WINS"
-                            : opponentName
-                                  .ToUpperInvariant() +
-                              " WINS";
+                            ? playerName.ToUpperInvariant() + " WINS"
+                            : opponentName.ToUpperInvariant() + " WINS";
 
-                resultTitle.color =
-                    accent;
+                resultTitle.color = accent;
             }
 
             if (resultDetail != null)
@@ -303,26 +244,16 @@ namespace Pupverse
 
             if (winnerHighlight != null)
             {
-                winnerHighlight.alpha =
-                    1f;
+                winnerHighlight.alpha = 1f;
             }
 
-            if (
-                won &&
-                victory != null
-            )
+            if (won && victory != null)
             {
                 victory.Play(accent);
             }
 
-            // -----------------------------------------
-            // Animate ONLY the card that actually won.
-            // -----------------------------------------
-
-            if (
-                !draw &&
-                cardAnimator != null
-            )
+            // Animate ONLY the card that won the stat comparison.
+            if (!draw && cardAnimator != null)
             {
                 bool boosted =
                     won
@@ -331,34 +262,27 @@ namespace Pupverse
 
                 if (won)
                 {
-                    cardAnimator
-                        .PlayPlayerResultAttack(
-                            result.Stat,
-                            boosted
-                        );
+                    cardAnimator.PlayPlayerResultAttack(
+                        result.Stat,
+                        boosted
+                    );
                 }
                 else
                 {
-                    cardAnimator
-                        .PlayRivalResultAttack(
-                            result.Stat,
-                            boosted
-                        );
+                    cardAnimator.PlayRivalResultAttack(
+                        result.Stat,
+                        boosted
+                    );
                 }
 
-                while (
-                    cardAnimator.IsAttacking
-                )
+                while (cardAnimator.IsAttacking)
                 {
                     yield return null;
                 }
             }
 
             // Small winner emphasis after the 3D movement.
-            if (
-                !draw &&
-                !GameSettings.ReducedMotion
-            )
+            if (!draw && !GameSettings.ReducedMotion)
             {
                 Transform winner =
                     won
@@ -370,12 +294,9 @@ namespace Pupverse
 
                 float elapsed = 0f;
 
-                while (
-                    elapsed < 0.55f
-                )
+                while (elapsed < 0.55f)
                 {
-                    elapsed +=
-                        Time.unscaledDeltaTime;
+                    elapsed += Time.unscaledDeltaTime;
 
                     winner.localScale =
                         original *
@@ -383,8 +304,7 @@ namespace Pupverse
                             1f +
                             Mathf.Sin(
                                 Mathf.Clamp01(
-                                    elapsed /
-                                    0.55f
+                                    elapsed / 0.55f
                                 ) *
                                 Mathf.PI
                             ) *
@@ -394,14 +314,12 @@ namespace Pupverse
                     yield return null;
                 }
 
-                winner.localScale =
-                    original;
+                winner.localScale = original;
             }
 
             if (replayButton != null)
             {
-                replayButton.interactable =
-                    true;
+                replayButton.interactable = true;
             }
 
             resolution = null;
@@ -415,7 +333,9 @@ namespace Pupverse
             round.Reset();
 
             if (victory != null)
+            {
                 victory.Clear();
+            }
 
             ResetUI();
         }
@@ -439,25 +359,20 @@ namespace Pupverse
 
             if (winnerHighlight != null)
             {
-                winnerHighlight.alpha =
-                    0f;
+                winnerHighlight.alpha = 0f;
             }
 
-            foreach (
-                var button in statButtons
-            )
+            foreach (Button button in statButtons)
             {
                 if (button != null)
                 {
-                    button.interactable =
-                        true;
+                    button.interactable = true;
                 }
             }
 
             if (replayButton != null)
             {
-                replayButton.interactable =
-                    false;
+                replayButton.interactable = false;
             }
 
             if (scoreLabel != null)

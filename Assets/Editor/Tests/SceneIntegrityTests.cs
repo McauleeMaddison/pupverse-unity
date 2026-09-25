@@ -16,7 +16,7 @@ namespace Pupverse.Tests
             Assert.That(battle.opponentCard.data.id, Is.EqualTo("crypto-raven"));
             Assert.That(battle.cardAnimator, Is.Not.Null);
             Assert.That(battle.autoNextRound, Is.True);
-            Assert.That(Object.FindObjectsByType<Canvas>(FindObjectsInactive.Include, FindObjectsSortMode.None).Length, Is.EqualTo(1));
+            Assert.That(Object.FindObjectsByType<Canvas>(FindObjectsInactive.Include).Length, Is.EqualTo(1));
             Assert.That(battle.GetComponentInParent<Canvas>().gameObject.activeInHierarchy, Is.True);
             Assert.That(battle.statBindings.Length, Is.EqualTo(5));
             for (int i = 0; i < 5; i++)

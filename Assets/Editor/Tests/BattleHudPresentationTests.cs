@@ -50,7 +50,7 @@ namespace Pupverse.Tests
                     if(label.enabled && label.name=="Stat value")
                         Assert.That(label.cachedTextGenerator.vertexCount,Is.GreaterThan(0),"Stat numbers must actually render");
             }
-            foreach(var graphic in Object.FindObjectsByType<BattleHudGraphic>(FindObjectsSortMode.None))
+            foreach(var graphic in Object.FindObjectsByType<BattleHudGraphic>())
             {
                 Assert.That(graphic.raycastTarget,Is.False);
                 Assert.That(graphic.GetComponent<CanvasRenderer>(),Is.Not.Null,"Custom HUD meshes require a renderer");

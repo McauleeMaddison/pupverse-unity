@@ -66,6 +66,12 @@ namespace Pupverse
 
         public bool IsResolved => round.IsResolved;
 
+        // Exposed for the existing HUD and editor tests.
+        public bool IsResolving => resolution != null;
+
+        // Exposes the most recently resolved Top Trumps result.
+        public BattleResult Result => round.Result;
+
         public int Wins => wins;
         public int Losses => losses;
         public int Draws => draws;

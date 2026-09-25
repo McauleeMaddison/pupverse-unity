@@ -8,11 +8,19 @@ namespace Pupverse
 {
     public sealed class BattleController : MonoBehaviour
     {
+        [Serializable]
+        public sealed class StatButtonBinding
+        {
+            public CardStat stat;
+            public Button button;
+        }
+
         [Header("Cards")]
         public CardView playerCard;
         public CardView opponentCard;
 
         [Header("Stat Selection")]
+        public StatButtonBinding[] statBindings;
         public Button[] statButtons;
 
         [Header("Navigation")]
@@ -36,18 +44,14 @@ namespace Pupverse
         [Min(0f)]
         public float comparisonDuration = 0.55f;
 
-        /*
-         * These events are used by BattleHudPresentation.
-         *
-         * SelectionReady:
-         *      The player may choose a stat.
-         *
-         * ComparisonStarted:
-         *      A stat has been selected and both cards are being compared.
-         *
-         * WinnerRevealed:
-         *      The comparison is complete and a winner/draw is known.
-         */
+        [Min(0f)]
+        public float winnerReadDuration = 0.65f;
+
+        [Min(0f)]
+        public float resultHoldDuration = 1.1f;
+
+        public bool autoNextRound = true;
+
         public event Action SelectionReady;
         public event Action<BattleResult> ComparisonStarted;
         public event Action<BattleResult> WinnerRevealed;
@@ -62,7 +66,6 @@ namespace Pupverse
 
         public bool IsResolved => round.IsResolved;
 
-        // Public score API required by BattleHudPresentation.
         public int Wins => wins;
         public int Losses => losses;
         public int Draws => draws;
@@ -90,6 +93,27 @@ namespace Pupverse
 
         void WireStatButtons()
         {
+            bool hasBindings =
+                statBindings != null &&
+                statBindings.Length > 0;
+
+            if (hasBindings)
+            {
+                foreach (StatButtonBinding binding in statBindings)
+                {
+                    if (binding == null || binding.button == null)
+                        continue;
+
+                    CardStat chosenStat = binding.stat;
+
+                    binding.button.onClick.AddListener(
+                        () => Choose(chosenStat)
+                    );
+                }
+
+                return;
+            }
+
             if (statButtons == null)
                 return;
 
@@ -161,10 +185,6 @@ namespace Pupverse
 
             BattleResult result = round.Result;
 
-            /*
-             * Tell the presentation layer that the comparison
-             * has started.
-             */
             ComparisonStarted?.Invoke(result);
 
             resolution = StartCoroutine(
@@ -205,12 +225,17 @@ namespace Pupverse
                     );
             }
 
-            float delay =
+            float comparisonWait =
                 GameSettings.ReducedMotion
                     ? 0.05f
                     : comparisonDuration;
 
-            yield return new WaitForSecondsRealtime(delay);
+            if (comparisonWait > 0f)
+            {
+                yield return new WaitForSecondsRealtime(
+                    comparisonWait
+                );
+            }
 
             bool playerWon =
                 result.Winner ==
@@ -276,19 +301,8 @@ namespace Pupverse
                 victory.Play(accent);
             }
 
-            /*
-             * Tell BattleHudPresentation that the result is now known.
-             *
-             * This restores the API that the existing HUD script
-             * already expects.
-             */
             WinnerRevealed?.Invoke(result);
 
-            /*
-             * The Top Trumps comparison decides which 3D card moves.
-             *
-             * No alternating fake attack turns.
-             */
             if (!draw && cardAnimator != null)
             {
                 bool boosted =
@@ -324,9 +338,6 @@ namespace Pupverse
                 }
             }
 
-            /*
-             * Small winner pulse after the arena animation.
-             */
             if (!draw && !GameSettings.ReducedMotion)
             {
                 Transform winner =
@@ -348,8 +359,7 @@ namespace Pupverse
 
                         float t =
                             Mathf.Clamp01(
-                                elapsed /
-                                pulseDuration
+                                elapsed / pulseDuration
                             );
 
                         winner.localScale =
@@ -368,6 +378,36 @@ namespace Pupverse
                     winner.localScale =
                         originalScale;
                 }
+            }
+
+            if (winnerReadDuration > 0f)
+            {
+                yield return new WaitForSecondsRealtime(
+                    winnerReadDuration
+                );
+            }
+
+            if (autoNextRound)
+            {
+                if (resultHoldDuration > 0f)
+                {
+                    yield return new WaitForSecondsRealtime(
+                        resultHoldDuration
+                    );
+                }
+
+                round.Reset();
+
+                if (victory != null)
+                {
+                    victory.Clear();
+                }
+
+                resolution = null;
+
+                ResetUI();
+
+                yield break;
             }
 
             if (replayButton != null)
@@ -430,14 +470,32 @@ namespace Pupverse
 
             UpdateScoreLabel();
 
-            /*
-             * Existing BattleHudPresentation listens for this.
-             */
             SelectionReady?.Invoke();
         }
 
-        void SetStatButtonsInteractable(bool interactable)
+        void SetStatButtonsInteractable(
+            bool interactable
+        )
         {
+            bool hasBindings =
+                statBindings != null &&
+                statBindings.Length > 0;
+
+            if (hasBindings)
+            {
+                foreach (StatButtonBinding binding in statBindings)
+                {
+                    if (binding != null &&
+                        binding.button != null)
+                    {
+                        binding.button.interactable =
+                            interactable;
+                    }
+                }
+
+                return;
+            }
+
             if (statButtons == null)
                 return;
 

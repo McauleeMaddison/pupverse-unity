@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -35,6 +36,22 @@ namespace Pupverse
         [Min(0f)]
         public float comparisonDuration = 0.55f;
 
+        /*
+         * These events are used by BattleHudPresentation.
+         *
+         * SelectionReady:
+         *      The player may choose a stat.
+         *
+         * ComparisonStarted:
+         *      A stat has been selected and both cards are being compared.
+         *
+         * WinnerRevealed:
+         *      The comparison is complete and a winner/draw is known.
+         */
+        public event Action SelectionReady;
+        public event Action<BattleResult> ComparisonStarted;
+        public event Action<BattleResult> WinnerRevealed;
+
         readonly BattleRound round = new BattleRound();
 
         int wins;
@@ -45,21 +62,16 @@ namespace Pupverse
 
         public bool IsResolved => round.IsResolved;
 
+        // Public score API required by BattleHudPresentation.
+        public int Wins => wins;
+        public int Losses => losses;
+        public int Draws => draws;
+
         void Awake()
         {
             GameSettings.Initialize();
 
-            for (int i = 0; i < statButtons.Length; i++)
-            {
-                int index = i;
-
-                if (statButtons[i] == null)
-                    continue;
-
-                statButtons[i].onClick.AddListener(
-                    () => Choose((CardStat)index)
-                );
-            }
+            WireStatButtons();
 
             if (replayButton != null)
             {
@@ -76,8 +88,31 @@ namespace Pupverse
             ResetUI();
         }
 
+        void WireStatButtons()
+        {
+            if (statButtons == null)
+                return;
+
+            for (int i = 0; i < statButtons.Length; i++)
+            {
+                Button button = statButtons[i];
+
+                if (button == null)
+                    continue;
+
+                int index = i;
+
+                button.onClick.AddListener(
+                    () => Choose((CardStat)index)
+                );
+            }
+        }
+
         public void Choose(CardStat stat)
         {
+            if (resolution != null)
+                return;
+
             if (playerCard == null || opponentCard == null)
             {
                 Debug.LogWarning(
@@ -98,6 +133,16 @@ namespace Pupverse
                 return;
             }
 
+            if (!Enum.IsDefined(typeof(CardStat), stat))
+            {
+                Debug.LogWarning(
+                    "BattleController received an invalid CardStat.",
+                    this
+                );
+
+                return;
+            }
+
             if (!round.TryResolve(
                     playerCard.data,
                     opponentCard.data,
@@ -107,36 +152,42 @@ namespace Pupverse
                 return;
             }
 
-            foreach (Button button in statButtons)
-            {
-                if (button != null)
-                    button.interactable = false;
-            }
+            SetStatButtonsInteractable(false);
 
             if (replayButton != null)
+            {
                 replayButton.interactable = false;
+            }
+
+            BattleResult result = round.Result;
+
+            /*
+             * Tell the presentation layer that the comparison
+             * has started.
+             */
+            ComparisonStarted?.Invoke(result);
 
             resolution = StartCoroutine(
-                ShowResult(round.Result)
+                ShowResult(result)
             );
         }
 
         IEnumerator ShowResult(BattleResult result)
         {
-            string playerName =
-                playerCard.data != null &&
-                !string.IsNullOrWhiteSpace(playerCard.data.displayName)
-                    ? playerCard.data.displayName
-                    : "PLAYER";
+            string playerName = GetCardName(
+                playerCard,
+                "PLAYER"
+            );
 
-            string opponentName =
-                opponentCard.data != null &&
-                !string.IsNullOrWhiteSpace(opponentCard.data.displayName)
-                    ? opponentCard.data.displayName
-                    : "OPPONENT";
+            string opponentName = GetCardName(
+                opponentCard,
+                "OPPONENT"
+            );
 
             string statName =
-                result.Stat.ToString().ToUpperInvariant();
+                result.Stat
+                    .ToString()
+                    .ToUpperInvariant();
 
             if (resultTitle != null)
             {
@@ -147,21 +198,11 @@ namespace Pupverse
             if (resultDetail != null)
             {
                 resultDetail.text =
-                    playerName +
-                    ": " +
-                    result.PlayerBase +
-                    " + " +
-                    result.PlayerBoost +
-                    " = " +
-                    result.PlayerTotal +
-                    "\n" +
-                    opponentName +
-                    ": " +
-                    result.OpponentBase +
-                    " + " +
-                    result.OpponentBoost +
-                    " = " +
-                    result.OpponentTotal;
+                    BuildComparisonText(
+                        playerName,
+                        opponentName,
+                        result
+                    );
             }
 
             float delay =
@@ -171,13 +212,15 @@ namespace Pupverse
 
             yield return new WaitForSecondsRealtime(delay);
 
-            bool won =
-                result.Winner == BattleWinner.Player;
+            bool playerWon =
+                result.Winner ==
+                BattleWinner.Player;
 
             bool draw =
-                result.Winner == BattleWinner.Draw;
+                result.Winner ==
+                BattleWinner.Draw;
 
-            if (won)
+            if (playerWon)
             {
                 wins++;
             }
@@ -191,7 +234,7 @@ namespace Pupverse
             }
 
             Color accent =
-                won
+                playerWon
                     ? UITheme.Mint
                     : draw
                         ? UITheme.Lavender
@@ -202,7 +245,7 @@ namespace Pupverse
                 resultTitle.text =
                     draw
                         ? "A PERFECT TIE"
-                        : won
+                        : playerWon
                             ? playerName.ToUpperInvariant() + " WINS"
                             : opponentName.ToUpperInvariant() + " WINS";
 
@@ -214,107 +257,117 @@ namespace Pupverse
                 resultDetail.text =
                     statName +
                     "\n" +
-                    playerName +
-                    ": " +
-                    result.PlayerBase +
-                    " + " +
-                    result.PlayerBoost +
-                    " = " +
-                    result.PlayerTotal +
-                    "\n" +
-                    opponentName +
-                    ": " +
-                    result.OpponentBase +
-                    " + " +
-                    result.OpponentBoost +
-                    " = " +
-                    result.OpponentTotal;
+                    BuildComparisonText(
+                        playerName,
+                        opponentName,
+                        result
+                    );
             }
 
-            if (scoreLabel != null)
-            {
-                scoreLabel.text =
-                    wins +
-                    " WINS    " +
-                    losses +
-                    " LOSSES    " +
-                    draws +
-                    " DRAWS";
-            }
+            UpdateScoreLabel();
 
             if (winnerHighlight != null)
             {
                 winnerHighlight.alpha = 1f;
             }
 
-            if (won && victory != null)
+            if (playerWon && victory != null)
             {
                 victory.Play(accent);
             }
 
-            // Animate ONLY the card that won the stat comparison.
+            /*
+             * Tell BattleHudPresentation that the result is now known.
+             *
+             * This restores the API that the existing HUD script
+             * already expects.
+             */
+            WinnerRevealed?.Invoke(result);
+
+            /*
+             * The Top Trumps comparison decides which 3D card moves.
+             *
+             * No alternating fake attack turns.
+             */
             if (!draw && cardAnimator != null)
             {
                 bool boosted =
-                    won
+                    playerWon
                         ? result.PlayerBoost > 0
                         : result.OpponentBoost > 0;
 
-                if (won)
+                bool animationStarted;
+
+                if (playerWon)
                 {
-                    cardAnimator.PlayPlayerResultAttack(
-                        result.Stat,
-                        boosted
-                    );
+                    animationStarted =
+                        cardAnimator.PlayPlayerResultAttack(
+                            result.Stat,
+                            boosted
+                        );
                 }
                 else
                 {
-                    cardAnimator.PlayRivalResultAttack(
-                        result.Stat,
-                        boosted
-                    );
+                    animationStarted =
+                        cardAnimator.PlayRivalResultAttack(
+                            result.Stat,
+                            boosted
+                        );
                 }
 
-                while (cardAnimator.IsAttacking)
+                if (animationStarted)
                 {
-                    yield return null;
+                    while (cardAnimator.IsAttacking)
+                    {
+                        yield return null;
+                    }
                 }
             }
 
-            // Small winner emphasis after the 3D movement.
+            /*
+             * Small winner pulse after the arena animation.
+             */
             if (!draw && !GameSettings.ReducedMotion)
             {
                 Transform winner =
-                    won
+                    playerWon
                         ? playerCard.transform
                         : opponentCard.transform;
 
-                Vector3 original =
-                    winner.localScale;
-
-                float elapsed = 0f;
-
-                while (elapsed < 0.55f)
+                if (winner != null)
                 {
-                    elapsed += Time.unscaledDeltaTime;
+                    Vector3 originalScale =
+                        winner.localScale;
+
+                    float elapsed = 0f;
+                    const float pulseDuration = 0.55f;
+
+                    while (elapsed < pulseDuration)
+                    {
+                        elapsed += Time.unscaledDeltaTime;
+
+                        float t =
+                            Mathf.Clamp01(
+                                elapsed /
+                                pulseDuration
+                            );
+
+                        winner.localScale =
+                            originalScale *
+                            (
+                                1f +
+                                Mathf.Sin(
+                                    t * Mathf.PI
+                                ) *
+                                0.07f
+                            );
+
+                        yield return null;
+                    }
 
                     winner.localScale =
-                        original *
-                        (
-                            1f +
-                            Mathf.Sin(
-                                Mathf.Clamp01(
-                                    elapsed / 0.55f
-                                ) *
-                                Mathf.PI
-                            ) *
-                            0.07f
-                        );
-
-                    yield return null;
+                        originalScale;
                 }
-
-                winner.localScale = original;
             }
 
             if (replayButton != null)
@@ -331,6 +384,12 @@ namespace Pupverse
                 return;
 
             round.Reset();
+
+            if (cardAnimator != null &&
+                cardAnimator.IsAttacking)
+            {
+                cardAnimator.CancelAttack();
+            }
 
             if (victory != null)
             {
@@ -362,29 +421,89 @@ namespace Pupverse
                 winnerHighlight.alpha = 0f;
             }
 
-            foreach (Button button in statButtons)
-            {
-                if (button != null)
-                {
-                    button.interactable = true;
-                }
-            }
+            SetStatButtonsInteractable(true);
 
             if (replayButton != null)
             {
                 replayButton.interactable = false;
             }
 
-            if (scoreLabel != null)
+            UpdateScoreLabel();
+
+            /*
+             * Existing BattleHudPresentation listens for this.
+             */
+            SelectionReady?.Invoke();
+        }
+
+        void SetStatButtonsInteractable(bool interactable)
+        {
+            if (statButtons == null)
+                return;
+
+            foreach (Button button in statButtons)
             {
-                scoreLabel.text =
-                    wins +
-                    " WINS    " +
-                    losses +
-                    " LOSSES    " +
-                    draws +
-                    " DRAWS";
+                if (button != null)
+                {
+                    button.interactable =
+                        interactable;
+                }
             }
+        }
+
+        void UpdateScoreLabel()
+        {
+            if (scoreLabel == null)
+                return;
+
+            scoreLabel.text =
+                wins +
+                " WINS    " +
+                losses +
+                " LOSSES    " +
+                draws +
+                " DRAWS";
+        }
+
+        static string GetCardName(
+            CardView card,
+            string fallback
+        )
+        {
+            if (card == null ||
+                card.data == null ||
+                string.IsNullOrWhiteSpace(
+                    card.data.displayName
+                ))
+            {
+                return fallback;
+            }
+
+            return card.data.displayName;
+        }
+
+        static string BuildComparisonText(
+            string playerName,
+            string opponentName,
+            BattleResult result
+        )
+        {
+            return
+                playerName +
+                ": " +
+                result.PlayerBase +
+                " + " +
+                result.PlayerBoost +
+                " = " +
+                result.PlayerTotal +
+                "\n" +
+                opponentName +
+                ": " +
+                result.OpponentBase +
+                " + " +
+                result.OpponentBoost +
+                " = " +
+                result.OpponentTotal;
         }
     }
 }

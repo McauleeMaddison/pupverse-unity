@@ -3876,6 +3876,7 @@ GameObject:
   - component: {fileID: 416956951}
   - component: {fileID: 416956950}
   - component: {fileID: 416956952}
+  - component: {fileID: 416956953}
   m_Layer: 0
   m_Name: BattleMatchController
   m_TagString: Untagged
@@ -4045,6 +4046,30 @@ MonoBehaviour:
   stackPulseDuration: 0.28
   dealPulseDuration: 0.22
   panelOpacity: 0.42
+--- !u!114 &416956953
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 416956947}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c3f0809b711334da485bf4f78c79c443, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Pupverse.Runtime::Pupverse.BattlePremiumCardPresentation
+  match: {fileID: 0}
+  cardDisplay: {fileID: 0}
+  frameWidth: 0.055
+  frameDepth: 0.035
+  backDepth: 0.028
+  bodyMetallic: 0.82
+  bodySmoothness: 0.88
+  frameMetallic: 0.92
+  frameSmoothness: 0.94
+  normalGlow: 1.15
+  legendaryGlow: 2.1
+  mythicGlow: 2.65
 --- !u!1 &431192963
 GameObject:
   m_ObjectHideFlags: 0
@@ -18776,6 +18801,7 @@ GameObject:
   - component: {fileID: 2012651909}
   - component: {fileID: 2012651908}
   - component: {fileID: 2012651907}
+  - component: {fileID: 2012651910}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -18857,6 +18883,31 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 30, y: 0, z: 0}
+--- !u!114 &2012651910
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2012651906}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 53791fea8d0e34d7eb441be987d11403, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Pupverse.Runtime::Pupverse.BattleCameraPresentation
+  battle: {fileID: 0}
+  battleCamera: {fileID: 0}
+  comparisonPush: 0.24
+  impactPush: 0.36
+  positionSmoothTime: 0.16
+  rotationSmoothTime: 0.18
+  winnerHoldDuration: 0.72
+  winnerTiltDegrees: 1
+  winnerRollDegrees: 0.45
+  shakeStrength: 0.038
+  shakeDuration: 0.24
+  shakeFrequency: 28
+  shakeRotation: 0.38
 --- !u!1 &2012825090
 GameObject:
   m_ObjectHideFlags: 0

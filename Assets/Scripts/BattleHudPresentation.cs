@@ -30,6 +30,9 @@ namespace Pupverse
         int lastPlayer = -1, lastRival = -1;
         bool built, comparing, revealed;
         Font font;
+        BattleMatchController match;
+        bool visible=true;
+        CanvasGroup controlsGroup, headerGroup;
         static readonly Color Cyan = new Color(.35f,.93f,1);
         static readonly Color Violet = new Color(.76f,.58f,1);
         static readonly Color Muted = new Color(.55f,.65f,.79f);
@@ -41,10 +44,15 @@ namespace Pupverse
             if (layout == null || layout.battleController == null) { enabled=false; return; }
             battle = layout.battleController;
             font = battle.resultTitle.font;
+            match=battle.matchController;
             Build();
+            controlsGroup=layout.controlsRoot.GetComponent<CanvasGroup>();
+            if(controlsGroup==null) controlsGroup=layout.controlsRoot.gameObject.AddComponent<CanvasGroup>();
+            headerGroup=header.gameObject.AddComponent<CanvasGroup>();
             built=true;
             Subscribe();
             Ready();
+            SetVisible(visible);
         }
         void OnEnable() { if(built) { Subscribe(); Ready(); } }
         void Subscribe()
@@ -52,6 +60,7 @@ namespace Pupverse
             battle.SelectionReady += Ready;
             battle.ComparisonStarted += Compare;
             battle.WinnerRevealed += Reveal;
+            if(match!=null) { match.RoundPrepared+=Prepared; match.CardCountsChanged+=Counts; match.RoundSettled+=Settled; }
         }
         void OnDisable()
         {
@@ -59,6 +68,27 @@ namespace Pupverse
             battle.SelectionReady -= Ready;
             battle.ComparisonStarted -= Compare;
             battle.WinnerRevealed -= Reveal;
+            if(match!=null) { match.RoundPrepared-=Prepared; match.CardCountsChanged-=Counts; match.RoundSettled-=Settled; }
+        }
+        public void SetVisible(bool value)
+        {
+            visible=value;
+            if(!built || controlsGroup==null || headerGroup==null) return;
+            controlsGroup.alpha=headerGroup.alpha=value?1:0;
+            controlsGroup.interactable=controlsGroup.blocksRaycasts=value;
+            headerGroup.blocksRaycasts=false;
+        }
+        void Prepared(CardData player,CardData rival,BattleTurnOwner owner) { Ready(); }
+        void Counts(int player,int rival,int pot)
+        {
+            plateRoles[0].text="YOU / "+player+" CARDS";
+            plateRoles[1].text="RIVAL / "+rival+" CARDS";
+            hint.text=pot>0?"DRAW POT / "+pot+" CARDS":"WINNER TAKES BOTH CARDS";
+        }
+        void Settled(BattleResult value,int collected)
+        {
+            hint.text=value.Winner==BattleWinner.Draw?"DRAW / CARDS HELD IN THE POT":
+                (value.Winner==BattleWinner.Player?"YOU":"RIVAL")+" COLLECTED "+collected+" CARDS";
         }
         void Build()
         {
@@ -145,6 +175,21 @@ namespace Pupverse
             roundLabel.text="P U P V E R S E     /     ROUND "+(battle.Wins+battle.Losses+battle.Draws+1).ToString("00");
             plateRoles[0].text="YOU  /  READY"; plateRoles[1].text="RIVAL  /  READY";
             hint.text="BASE + ABILITY BONUS";
+            for(int i=0;i<2;i++) plateNames[i].text=(i==0?battle.playerCard:battle.opponentCard).data.displayName.ToUpperInvariant();
+            for(int i=0;i<5;i++)
+            {
+                var card=battle.playerCard.data; int boost=card.abilityBoosts.Get((CardStat)i);
+                tiles[i].number.text=card.EffectiveValue((CardStat)i).ToString();
+                tiles[i].bonus.color=boost>0?BattleCardEffects.StatColor((CardStat)i):Muted;
+                tiles[i].bonus.text=boost>0?"+"+boost+" BOOST":"BASE";
+            }
+            if(match!=null)
+            {
+                Counts(match.PlayerCardCount,match.RivalCardCount,match.PotCount);
+                bool yourTurn=match.TurnOwner==BattleTurnOwner.Player;
+                battle.resultTitle.text=yourTurn?"CHOOSE YOUR EDGE":"RIVAL IS CHOOSING";
+                battle.resultDetail.text=yourTurn?"Highest total wins. Capture their card.":"The rival picks a stat from their own card.";
+            }
             sweep.Tint(Cyan); sweep.Fill(1);
         }
         void Compare(BattleResult value)

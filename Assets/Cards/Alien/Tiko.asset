@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 07586efbcd0f34aacbd2c3d63c1c8cd1, type: 3}
+  m_Name: Tiko
+  m_EditorClassIdentifier: Pupverse.Runtime::Pupverse.CardData
+  id: alien-tiko
+  displayName: Tiko
+  series: AlienPups
+  element: Starlight Shield
+  year: 2025
+  rarity: 3
+  stats:
+    power: 78
+    speed: 92
+    intelligence: 89
+    defence: 93
+    luck: 74
+  abilityName: Cosmic Bubble
+  abilityDescription: Tiko summons a protective starlight bubble, gaining +15 Defence for one round.
+  abilityBoosts:
+    power: 0
+    speed: 0
+    intelligence: 0
+    defence: 15
+    luck: 0
+  fact: Tiko enters the PupVerse arena with Cosmic Bubble.
+  originalCardArt: {fileID: 2800000, guid: 0249883f9923349019542cbcbde977b6, type: 3}
+  heroArt: {fileID: 0}
+  portraitUV:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 1
+    height: 1

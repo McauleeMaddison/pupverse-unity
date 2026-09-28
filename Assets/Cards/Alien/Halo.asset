@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 07586efbcd0f34aacbd2c3d63c1c8cd1, type: 3}
+  m_Name: Halo
+  m_EditorClassIdentifier: Pupverse.Runtime::Pupverse.CardData
+  id: alien-halo
+  displayName: Halo
+  series: AlienPups
+  element: Solar Halo
+  year: 2025
+  rarity: 5
+  stats:
+    power: 86
+    speed: 88
+    intelligence: 95
+    defence: 82
+    luck: 90
+  abilityName: Halo Ascension
+  abilityDescription: Halo rises through a solar ring, gaining +18 Intelligence and +14 Luck.
+  abilityBoosts:
+    power: 0
+    speed: 0
+    intelligence: 18
+    defence: 0
+    luck: 14
+  fact: Halo enters the PupVerse arena with Halo Ascension.
+  originalCardArt: {fileID: 2800000, guid: daccf288a06574c42a4ca4ee38e3b177, type: 3}
+  heroArt: {fileID: 0}
+  portraitUV:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 1
+    height: 1

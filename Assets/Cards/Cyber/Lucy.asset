@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 07586efbcd0f34aacbd2c3d63c1c8cd1, type: 3}
+  m_Name: Lucy
+  m_EditorClassIdentifier: Pupverse.Runtime::Pupverse.CardData
+  id: cyber-lucy
+  displayName: Lucy
+  series: CyberPups
+  element: Violet Link
+  year: 2025
+  rarity: 3
+  stats:
+    power: 77
+    speed: 84
+    intelligence: 92
+    defence: 80
+    luck: 83
+  abilityName: Neural Link
+  abilityDescription: Lucy links directly into the arena grid, gaining +17 Intelligence and +9 Luck.
+  abilityBoosts:
+    power: 0
+    speed: 0
+    intelligence: 17
+    defence: 0
+    luck: 9
+  fact: Lucy enters the PupVerse arena with Neural Link.
+  originalCardArt: {fileID: 2800000, guid: 823659260087c445ba8c43380a67982e, type: 3}
+  heroArt: {fileID: 0}
+  portraitUV:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 1
+    height: 1

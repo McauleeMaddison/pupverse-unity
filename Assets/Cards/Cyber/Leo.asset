@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 07586efbcd0f34aacbd2c3d63c1c8cd1, type: 3}
+  m_Name: Leo
+  m_EditorClassIdentifier: Pupverse.Runtime::Pupverse.CardData
+  id: cyber-leo
+  displayName: Leo
+  series: CyberPups
+  element: Solar Mech
+  year: 2025
+  rarity: 4
+  stats:
+    power: 93
+    speed: 82
+    intelligence: 85
+    defence: 86
+    luck: 74
+  abilityName: Lion Core
+  abilityDescription: Leo ignites his solar mech core, gaining +18 Power and +10 Defence.
+  abilityBoosts:
+    power: 18
+    speed: 0
+    intelligence: 0
+    defence: 10
+    luck: 0
+  fact: Leo enters the PupVerse arena with Lion Core.
+  originalCardArt: {fileID: 2800000, guid: 48fc56c5e4f0d4d23bea7c557b8d39cd, type: 3}
+  heroArt: {fileID: 0}
+  portraitUV:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 1
+    height: 1

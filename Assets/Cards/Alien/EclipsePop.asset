@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 07586efbcd0f34aacbd2c3d63c1c8cd1, type: 3}
+  m_Name: EclipsePop
+  m_EditorClassIdentifier: Pupverse.Runtime::Pupverse.CardData
+  id: alien-eclipse-pop
+  displayName: Eclipse Pop
+  series: AlienPups
+  element: Neon Halo
+  year: 2025
+  rarity: 5
+  stats:
+    power: 81
+    speed: 76
+    intelligence: 92
+    defence: 79
+    luck: 87
+  abilityName: Glowshift
+  abilityDescription: Eclipse Pop activates a luminous disguise aura, gaining +20 Intelligence and +10 Luck for one round.
+  abilityBoosts:
+    power: 0
+    speed: 0
+    intelligence: 20
+    defence: 0
+    luck: 10
+  fact: Eclipse Pop enters the PupVerse arena with Glowshift.
+  originalCardArt: {fileID: 2800000, guid: cdadd4ee174e34a72a36a55c00c62aeb, type: 3}
+  heroArt: {fileID: 0}
+  portraitUV:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 1
+    height: 1

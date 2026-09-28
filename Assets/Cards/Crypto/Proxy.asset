@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 07586efbcd0f34aacbd2c3d63c1c8cd1, type: 3}
+  m_Name: Proxy
+  m_EditorClassIdentifier: Pupverse.Runtime::Pupverse.CardData
+  id: crypto-proxy
+  displayName: Proxy
+  series: CryptoPups
+  element: Gold Protocol
+  year: 2025
+  rarity: 4
+  stats:
+    power: 86
+    speed: 82
+    intelligence: 92
+    defence: 80
+    luck: 84
+  abilityName: Golden Override
+  abilityDescription: Proxy overrides the arena protocol, gaining +16 Intelligence and +12 Power.
+  abilityBoosts:
+    power: 12
+    speed: 0
+    intelligence: 16
+    defence: 0
+    luck: 0
+  fact: Proxy enters the PupVerse arena with Golden Override.
+  originalCardArt: {fileID: 2800000, guid: e00fa26bb1b1741859399ce29fb2c58e, type: 3}
+  heroArt: {fileID: 0}
+  portraitUV:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 1
+    height: 1

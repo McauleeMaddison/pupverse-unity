@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 07586efbcd0f34aacbd2c3d63c1c8cd1, type: 3}
+  m_Name: Aqualis
+  m_EditorClassIdentifier: Pupverse.Runtime::Pupverse.CardData
+  id: alien-aqualis
+  displayName: Aqualis
+  series: AlienPups
+  element: Moon Dune
+  year: 2025
+  rarity: 2
+  stats:
+    power: 73
+    speed: 78
+    intelligence: 71
+    defence: 80
+    luck: 76
+  abilityName: Lunar Drift
+  abilityDescription: Aqualis rides the moonlit dunes, gaining +14 Speed and +12 Defence for one round.
+  abilityBoosts:
+    power: 0
+    speed: 14
+    intelligence: 0
+    defence: 12
+    luck: 0
+  fact: Aqualis enters the PupVerse arena with Lunar Drift.
+  originalCardArt: {fileID: 2800000, guid: 8edd8df5302774dc6adf4c0f371b2a4d, type: 3}
+  heroArt: {fileID: 0}
+  portraitUV:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 1
+    height: 1

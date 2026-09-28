@@ -20,13 +20,18 @@ public sealed class RunBattleChecks : ICallbacks
         Directory.CreateDirectory(ResultsDirectory);
         File.WriteAllText(Path.Combine(ResultsDirectory, "test-status.txt"), "Running");
         api.Execute(new ExecutionSettings(new Filter { testMode = TestMode.EditMode,
-            groupNames = new[] { "^Pupverse.Tests.BattleCardAnimatorTests", "^Pupverse.Tests.BattleRulesTests", "^Pupverse.Tests.BattleHudPresentationTests", "^Pupverse.Tests.SceneIntegrityTests" } }));
+            groupNames = new[] { "^Pupverse.Tests.BattleCardAnimatorTests", "^Pupverse.Tests.BattleRulesTests", "^Pupverse.Tests.BattleHudPresentationTests", "^Pupverse.Tests.SceneIntegrityTests", "^Pupverse.Tests.BattleMatchTests" } }));
     }
     public void RunStarted(ITestAdaptor tests) { }
     public void TestStarted(ITestAdaptor test) { }
     public void TestFinished(ITestResultAdaptor result) { }
     public void RunFinished(ITestResultAdaptor result)
     {
+        if(!Application.isBatchMode)
+            EditorApplication.delayCall += () => {
+                if(!EditorApplication.isPlayingOrWillChangePlaymode)
+                    UnityEditor.SceneManagement.EditorSceneManager.OpenScene("Assets/Scenes/Battle3D.unity");
+            };
         TestRunnerApi.SaveResultToFile(result, Path.Combine(ResultsDirectory, "test-results.xml"));
         File.WriteAllText(Path.Combine(ResultsDirectory, "test-status.txt"), result.ResultState + " passed=" + result.PassCount + " failed=" + result.FailCount);
     }

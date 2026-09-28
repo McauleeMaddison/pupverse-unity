@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 07586efbcd0f34aacbd2c3d63c1c8cd1, type: 3}
+  m_Name: Limebyte
+  m_EditorClassIdentifier: Pupverse.Runtime::Pupverse.CardData
+  id: alien-limebyte
+  displayName: Limebyte
+  series: AlienPups
+  element: Lunar Ice
+  year: 2025
+  rarity: 3
+  stats:
+    power: 82
+    speed: 91
+    intelligence: 87
+    defence: 79
+    luck: 74
+  abilityName: Frost Byte
+  abilityDescription: Limebyte unleashes binary frost, gaining +18 Speed and +14 Defence for one round.
+  abilityBoosts:
+    power: 0
+    speed: 18
+    intelligence: 0
+    defence: 14
+    luck: 0
+  fact: Limebyte enters the PupVerse arena with Frost Byte.
+  originalCardArt: {fileID: 2800000, guid: 71f5779d9099740cb8485490f20ac625, type: 3}
+  heroArt: {fileID: 0}
+  portraitUV:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 1
+    height: 1

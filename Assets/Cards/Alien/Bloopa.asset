@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 07586efbcd0f34aacbd2c3d63c1c8cd1, type: 3}
+  m_Name: Bloopa
+  m_EditorClassIdentifier: Pupverse.Runtime::Pupverse.CardData
+  id: alien-bloopa
+  displayName: Bloopa
+  series: AlienPups
+  element: Bubble Nova
+  year: 2025
+  rarity: 3
+  stats:
+    power: 70
+    speed: 69
+    intelligence: 88
+    defence: 75
+    luck: 90
+  abilityName: Prism Bubble
+  abilityDescription: Bloopa conjures a moonlit bubble shield, gaining +16 Intelligence and +13 Defence for one round.
+  abilityBoosts:
+    power: 0
+    speed: 0
+    intelligence: 16
+    defence: 13
+    luck: 0
+  fact: Bloopa enters the PupVerse arena with Prism Bubble.
+  originalCardArt: {fileID: 2800000, guid: c44a6b8703a1b4fd093c8585465ecb37, type: 3}
+  heroArt: {fileID: 0}
+  portraitUV:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 1
+    height: 1

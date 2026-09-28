@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 07586efbcd0f34aacbd2c3d63c1c8cd1, type: 3}
+  m_Name: Victor
+  m_EditorClassIdentifier: Pupverse.Runtime::Pupverse.CardData
+  id: cyber-victor
+  displayName: Victor
+  series: CyberPups
+  element: Crimson Servo
+  year: 2025
+  rarity: 4
+  stats:
+    power: 91
+    speed: 88
+    intelligence: 82
+    defence: 85
+    luck: 76
+  abilityName: Victory Drive
+  abilityDescription: Victor pushes his crimson servos beyond their limit, gaining +16 Power and +12 Speed.
+  abilityBoosts:
+    power: 16
+    speed: 12
+    intelligence: 0
+    defence: 0
+    luck: 0
+  fact: Victor enters the PupVerse arena with Victory Drive.
+  originalCardArt: {fileID: 2800000, guid: ca8d10b4cd00a4e2abe15bca82d55550, type: 3}
+  heroArt: {fileID: 0}
+  portraitUV:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 1
+    height: 1

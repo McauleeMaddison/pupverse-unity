@@ -33,6 +33,15 @@ namespace Pupverse
         BattleCardEffects effects;
         CardStat activeStat;
         bool abilityActive;
+        float identityTempo=1, identityArc, identitySway;
+        public void SetCardIdentity(CardData card)
+        {
+            uint seed=2166136261;
+            foreach(char c in card!=null?card.id??"":"") seed=(seed^c)*16777619;
+            identityTempo=card==null?1:.86f+(seed%9)*.035f;
+            identityArc=card==null?0:.03f+((seed>>4)%6)*.045f;
+            identitySway=card==null?0:((int)((seed>>8)%9)-4)*.035f;
+        }
 
         public bool IsAttacking { get; private set; }
         public bool IsPlayerTurn { get; private set; } = true;
@@ -230,20 +239,12 @@ namespace Pupverse
             bool boosted = false
         )
         {
-            IsPlayerTurn = true;
-
-            return BeginAttack(
-                playerCardRoot,
-                stat,
-                boosted
-            );
+            return BeginAttack(playerCardRoot,stat,boosted);
         }
 
         [ContextMenu("Test Raven Attack (Play Mode)")]
         public void AttackRival()
         {
-            IsPlayerTurn = false;
-
             BeginAttack(
                 rivalCardRoot,
                 CardStat.Power,
@@ -427,6 +428,7 @@ namespace Pupverse
                         ? 1.3f
                         : 1f;
 
+            speed *= identityTempo;
             if (
                 activeStat == CardStat.Power &&
                 !GameSettings.ReducedMotion
@@ -564,9 +566,7 @@ namespace Pupverse
                                     ? 0.12f
                                     : 0f;
 
-                    offset =
-                        Vector3.up *
-                        (arc * height);
+                    offset = Vector3.up * (arc * (height+identityArc));
 
                     if (
                         activeStat ==
@@ -599,6 +599,7 @@ namespace Pupverse
                     }
                 }
 
+                if(outward && !GameSettings.ReducedMotion) offset.x += Mathf.Sin(t*Mathf.PI*2)*Mathf.Sin(t*Mathf.PI)*identitySway;
                 root.localPosition =
                     Vector3.LerpUnclamped(
                         from,

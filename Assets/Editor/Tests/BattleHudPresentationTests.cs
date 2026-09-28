@@ -17,10 +17,15 @@ namespace Pupverse.Tests
         public IEnumerator SetUp()
         {
             EditorSceneManager.OpenScene("Assets/Scenes/Battle3D.unity");
+            Object.FindAnyObjectByType<BattleHandSelection>().enabled=false;
+            Object.FindAnyObjectByType<BattleMatchController>().enabled=false;
+            var singleRound=Object.FindAnyObjectByType<BattleController>();
+            singleRound.matchController=null; singleRound.autoNextRound=true;
             originalReducedMotion=GameSettings.ReducedMotion;
             yield return new EnterPlayMode();
             battle=Object.FindAnyObjectByType<BattleController>();
             hud=Object.FindAnyObjectByType<BattleHudPresentation>();
+            battle.matchController=null; battle.autoNextRound=true;
             yield return null;
             yield return null;
             Assert.That(hud,Is.Not.Null);

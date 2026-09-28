@@ -23,7 +23,13 @@ namespace Pupverse
     [DisallowMultipleComponent]
     public sealed class BattleMatchController : MonoBehaviour
     {
-        const int StartingCardCount = 6;
+        public const int StartingCardCount = 6;
+        public CardData[] availableCards;
+        public BattleCardDisplay cardDisplay;
+        public BattleController Battle => battle;
+        public CardData[] StartingHand => (CardData[])playerStartingCards.Clone();
+        public BattleMatchWinner LastWinner { get; private set; }
+        public event Action HandSelectionOpened;
 
         [Header("Existing Round Controller")]
         [SerializeField]
@@ -129,6 +135,7 @@ namespace Pupverse
 
             if (battle != null)
             {
+                battle.matchController=this;
                 /*
                  * The match controller now decides
                  * when the next pair of cards appears.
@@ -141,8 +148,8 @@ namespace Pupverse
         {
             if (battle != null)
             {
-                battle.WinnerRevealed +=
-                    OnWinnerRevealed;
+                battle.RoundCompleted +=
+                    OnRoundCompleted;
             }
         }
 
@@ -150,28 +157,49 @@ namespace Pupverse
         {
             if (battle != null)
             {
-                battle.WinnerRevealed -=
-                    OnWinnerRevealed;
+                battle.RoundCompleted -=
+                    OnRoundCompleted;
             }
 
             StopFlowCoroutines();
+            matchRunning=false; waitingForRoundSettlement=false;
+            if(battle!=null) battle.AbortRound();
         }
 
         void Start()
         {
+            SetPlayerStatButtons(false);
             if (startAutomatically)
             {
                 StartMatch();
             }
         }
 
+        public bool CanChoose(BattleTurnOwner owner) => isActiveAndEnabled && matchRunning &&
+            !waitingForRoundSettlement && turnOwner==owner && playerActiveCard!=null && rivalActiveCard!=null;
+
+        public bool SelectHand(CardData[] cards)
+        {
+            if(matchRunning || battle==null || battle.IsResolving || !ValidateHand(cards,"Player")) return false;
+            foreach(var card in cards)
+                if(availableCards==null || Array.IndexOf(availableCards,card)<0 || card.originalCardArt==null) return false;
+            playerStartingCards=(CardData[])cards.Clone(); return true;
+        }
+        public void EditHand()
+        {
+            if(matchRunning || (battle!=null && battle.IsResolving)) return;
+            HandSelectionOpened?.Invoke();
+        }
         public void StartMatch()
         {
+            if(!isActiveAndEnabled || matchRunning || (battle!=null && battle.IsResolving)) return;
             if (!ValidateSetup())
                 return;
 
             StopFlowCoroutines();
 
+            battle.ResetSession();
+            LastWinner=BattleMatchWinner.None;
             playerDeck.Clear();
             rivalDeck.Clear();
             drawPot.Clear();
@@ -269,8 +297,7 @@ namespace Pupverse
                 return false;
             }
 
-            HashSet<CardData> unique =
-                new HashSet<CardData>();
+            HashSet<string> unique = new HashSet<string>();
 
             for (
                 int i = 0;
@@ -293,7 +320,7 @@ namespace Pupverse
                     return false;
                 }
 
-                if (!unique.Add(card))
+                if (string.IsNullOrEmpty(card.id) || !unique.Add(card.id))
                 {
                     Debug.LogError(
                         owner +
@@ -311,46 +338,22 @@ namespace Pupverse
 
         void DealNextRound()
         {
-            if (!matchRunning)
-                return;
-
-            if (playerDeck.Count == 0 ||
-                rivalDeck.Count == 0)
-            {
-                ResolveDeckExhaustion();
-                return;
-            }
-
-            playerActiveCard =
-                playerDeck.Dequeue();
-
-            rivalActiveCard =
-                rivalDeck.Dequeue();
-
-            /*
-             * BattleController still resolves
-             * one card against one card.
-             */
-            battle.playerCard.data =
-                playerActiveCard;
-
-            battle.opponentCard.data =
-                rivalActiveCard;
-
-            /*
-             * Reset its one-round state.
-             */
-            battle.Replay();
-
+            flowCoroutine=StartCoroutine(DealCards());
+        }
+        IEnumerator DealCards()
+        {
+            if(!matchRunning) yield break;
+            if(playerDeck.Count==0 || rivalDeck.Count==0) { ResolveDeckExhaustion(); yield break; }
+            waitingForRoundSettlement=true;
+            playerActiveCard=playerDeck.Dequeue(); rivalActiveCard=rivalDeck.Dequeue();
             NotifyCardCounts();
-
-            RoundPrepared?.Invoke(
-                playerActiveCard,
-                rivalActiveCard,
-                turnOwner
-            );
-
-            PrepareTurn();
+            if(cardDisplay!=null) yield return cardDisplay.Reveal(playerActiveCard,rivalActiveCard);
+            if(!matchRunning) yield break;
+            battle.playerCard.data=playerActiveCard; battle.opponentCard.data=rivalActiveCard;
+            battle.PrepareRound();
+            waitingForRoundSettlement=false;
+            RoundPrepared?.Invoke(playerActiveCard,rivalActiveCard,turnOwner);
+            PrepareTurn(); flowCoroutine=null;
         }
 
         void PrepareTurn()
@@ -397,9 +400,7 @@ namespace Pupverse
                     rivalActiveCard
                 );
 
-            battle.Choose(
-                chosenStat
-            );
+            battle.ChooseForRival(chosenStat);
 
             rivalTurnCoroutine = null;
         }
@@ -438,7 +439,7 @@ namespace Pupverse
             return best;
         }
 
-        void OnWinnerRevealed(
+        void OnRoundCompleted(
             BattleResult result
         )
         {
@@ -463,13 +464,7 @@ namespace Pupverse
             BattleResult result
         )
         {
-            /*
-             * WinnerRevealed fires before the existing
-             * 3D clash animation finishes.
-             *
-             * Wait until BattleController has fully
-             * completed the round.
-             */
+            // Settlement begins only after the complete comparison and attack.
             while (battle.IsResolving)
             {
                 yield return null;
@@ -494,11 +489,6 @@ namespace Pupverse
             {
                 HandleWin(result);
             }
-
-            waitingForRoundSettlement =
-                false;
-
-            flowCoroutine = null;
 
             if (!matchRunning)
                 yield break;
@@ -721,7 +711,8 @@ namespace Pupverse
             BattleMatchWinner winner
         )
         {
-            matchRunning = false;
+            matchRunning = false; LastWinner=winner;
+            waitingForRoundSettlement=false;
 
             StopRivalTurn();
 
@@ -814,6 +805,8 @@ namespace Pupverse
 
         void StopFlowCoroutines()
         {
+            StopAllCoroutines();
+            if(cardDisplay!=null) cardDisplay.CancelReveal();
             if (flowCoroutine != null)
             {
                 StopCoroutine(

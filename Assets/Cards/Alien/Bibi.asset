@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 07586efbcd0f34aacbd2c3d63c1c8cd1, type: 3}
+  m_Name: Bibi
+  m_EditorClassIdentifier: Pupverse.Runtime::Pupverse.CardData
+  id: alien-bibi
+  displayName: Bibi
+  series: AlienPups
+  element: Bubble Sprite
+  year: 2025
+  rarity: 2
+  stats:
+    power: 67
+    speed: 82
+    intelligence: 80
+    defence: 73
+    luck: 94
+  abilityName: Cosmic Giggle
+  abilityDescription: Bibi bends probability with cosmic mischief, gaining +18 Luck and +10 Speed.
+  abilityBoosts:
+    power: 0
+    speed: 10
+    intelligence: 0
+    defence: 0
+    luck: 18
+  fact: Bibi enters the PupVerse arena with Cosmic Giggle.
+  originalCardArt: {fileID: 2800000, guid: a85b83cb49643438bb9278aa4b9726ea, type: 3}
+  heroArt: {fileID: 0}
+  portraitUV:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 1
+    height: 1

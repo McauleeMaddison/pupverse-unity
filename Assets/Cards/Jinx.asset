@@ -33,7 +33,7 @@ MonoBehaviour:
     defence: 18
     luck: 0
   fact: Jinx raises a burning shield with Plasma Bulwark.
-  originalCardArt: {fileID: 2800000, guid: f215a294df102463ba00969b353cfb50, type: 3}
+  originalCardArt: {fileID: 2800000, guid: 569a8f447d35046f18fcbb53553169a0, type: 3}
   heroArt: {fileID: 0}
   portraitUV:
     serializedVersion: 2

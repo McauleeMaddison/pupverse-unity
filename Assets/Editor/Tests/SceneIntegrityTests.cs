@@ -15,7 +15,14 @@ namespace Pupverse.Tests
             Assert.That(battle.playerCard.data.id, Is.EqualTo("crypto-brooklyn"));
             Assert.That(battle.opponentCard.data.id, Is.EqualTo("crypto-raven"));
             Assert.That(battle.cardAnimator, Is.Not.Null);
-            Assert.That(battle.autoNextRound, Is.True);
+            Assert.That(battle.autoNextRound, Is.False);
+            var match=Object.FindAnyObjectByType<BattleMatchController>();
+            Assert.That(battle.matchController,Is.EqualTo(match));
+            Assert.That(match.StartingHand.Length,Is.EqualTo(6));
+            Assert.That(match.availableCards.Length,Is.GreaterThanOrEqualTo(12));
+            Assert.That(match.cardDisplay.playerFront,Is.Not.Null);
+            Assert.That(match.cardDisplay.rivalFront,Is.Not.Null);
+            Assert.That(match.GetComponent<BattleHandSelection>(),Is.Not.Null);
             Assert.That(Object.FindObjectsByType<Canvas>(FindObjectsInactive.Include).Length, Is.EqualTo(1));
             Assert.That(battle.GetComponentInParent<Canvas>().gameObject.activeInHierarchy, Is.True);
             Assert.That(battle.statBindings.Length, Is.EqualTo(5));

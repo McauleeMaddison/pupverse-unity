@@ -33,7 +33,7 @@ MonoBehaviour:
     defence: 0
     luck: 0
   fact: Brooklyn rides ocean momentum with Coast Rush.
-  originalCardArt: {fileID: 2800000, guid: fe7dac01d9684416c8f1e358e1ccf359, type: 3}
+  originalCardArt: {fileID: 2800000, guid: f4a0385e3511a4412a221a926dae8d16, type: 3}
   heroArt: {fileID: 0}
   portraitUV:
     serializedVersion: 2

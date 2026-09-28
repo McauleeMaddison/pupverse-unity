@@ -9,6 +9,21 @@ namespace Pupverse.Editor
 {
     public static class BattleCardAnimationSetup
     {
+        [MenuItem("Pupverse/Open Mobile Battle")]
+        public static void OpenMobileBattle()
+        {
+            if(EditorApplication.isPlayingOrWillChangePlaymode) return;
+            if(!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
+            EditorSceneManager.OpenScene("Assets/Scenes/Battle3D.unity");
+        }
+
+        // Batch validation uses the same wiring as the editor menu.
+        public static void SetupBatch()
+        {
+            EditorSceneManager.OpenScene("Assets/Scenes/Battle3D.unity");
+            Setup();
+        }
+
         [MenuItem("Pupverse/Setup Brooklyn Attack Preview")]
         [MenuItem("Pupverse/Setup Battle Card Preview")]
         [MenuItem("Pupverse/Setup Stat Battle")]
@@ -32,6 +47,13 @@ namespace Pupverse.Editor
                 Debug.LogError("Battle3D needs its existing roots, both card assets, and exactly one BattleController. No setup changes made.");
                 return;
             }
+            var matches=scene.GetRootGameObjects().SelectMany(root=>root.GetComponentsInChildren<BattleMatchController>(true)).ToArray();
+            Transform playerFront=FindUnique(transforms,"PlayerCardFront"), rivalFront=FindUnique(transforms,"RivalCardFront");
+            var collection=AssetDatabase.FindAssets("t:CardData",new[]{"Assets/Cards"})
+                .Select(guid=>AssetDatabase.LoadAssetAtPath<CardData>(AssetDatabase.GUIDToAssetPath(guid)))
+                .Where(card=>card!=null && card.originalCardArt!=null).OrderBy(card=>card.id).ToArray();
+            if(matches.Length!=1 || playerFront==null || rivalFront==null || collection.Length<6 || collection.Select(c=>c.id).Distinct().Count()!=collection.Length)
+            { Debug.LogError("Expected the existing match controller, both card fronts and a unique card catalog. No setup changes made."); return; }
             BattleController battle = battles[0];
             var canvas = battle.GetComponentInParent<Canvas>(true);
             var views = scene.GetRootGameObjects().SelectMany(root => root.GetComponentsInChildren<CardView>(true)).ToArray();
@@ -72,7 +94,8 @@ namespace Pupverse.Editor
             battle.statButtons = buttons;
             battle.statBindings = buttons.Select((button, i) => new BattleController.StatButtonBinding { stat = (CardStat)i, button = button }).ToArray();
             battle.cardAnimator = animator;
-            battle.autoNextRound = true;
+            battle.autoNextRound = false;
+            battle.matchController=matches[0];
             battle.enabled = true;
             var layout = battle.GetComponent<ReferenceLayout>();
             if (layout != null) { Undo.RecordObject(layout, "Use mobile battle layout"); layout.enabled = false; }
@@ -128,13 +151,28 @@ namespace Pupverse.Editor
             if (hud == null) hud = Undo.AddComponent<BattleHudPresentation>(animator.gameObject);
             Undo.RecordObject(hud, "Connect neon battle HUD");
             hud.layout = presentation;
+            var match=matches[0];
+            var display=match.GetComponent<BattleCardDisplay>();
+            if(display==null) display=Undo.AddComponent<BattleCardDisplay>(match.gameObject);
+            Undo.RecordObject(display,"Connect card reveals");
+            display.playerRoot=player; display.rivalRoot=rival;
+            display.playerFront=playerFront.GetComponent<Renderer>(); display.rivalFront=rivalFront.GetComponent<Renderer>();
+            var matchSettings=new SerializedObject(match);
+            matchSettings.FindProperty("battle").objectReferenceValue=battle;
+            matchSettings.FindProperty("startAutomatically").boolValue=false;
+            matchSettings.ApplyModifiedProperties();
+            Undo.RecordObject(match,"Connect six-card collection");
+            match.availableCards=collection; match.cardDisplay=display;
+            var selector=match.GetComponent<BattleHandSelection>();
+            if(selector==null) selector=Undo.AddComponent<BattleHandSelection>(match.gameObject);
+            Undo.RecordObject(selector,"Connect mobile hand builder"); selector.match=match; selector.hud=hud;
             battle.comparisonDuration = 1.05f;
             battle.winnerReadDuration = .65f;
             battle.resultHoldDuration = 1.1f;
             canvas.gameObject.SetActive(true);
             Selection.activeGameObject = battle.gameObject;
             EditorSceneManager.MarkSceneDirty(scene);
-            if (EditorSceneManager.SaveScene(scene)) Debug.Log("Battle3D ready: select a stat, compare, animate the winner, then choose again.", battle);
+            if (EditorSceneManager.SaveScene(scene)) Debug.Log("Battle3D ready: customize six cards, start a match, and capture cards by winning stat comparisons.", battle);
         }
 
         static void StyleText(Text text, int size)

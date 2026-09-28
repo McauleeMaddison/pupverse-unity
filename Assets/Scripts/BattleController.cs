@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -51,7 +52,12 @@ namespace Pupverse
         public float resultHoldDuration = 1.1f;
 
         public bool autoNextRound = true;
+        public BattleMatchController matchController;
+        bool resolving;
+        Transform animatedUiCard;
+        Vector3 originalUiScale;
 
+        public event Action<BattleResult> RoundCompleted;
         public event Action SelectionReady;
         public event Action<BattleResult> ComparisonStarted;
         public event Action<BattleResult> WinnerRevealed;
@@ -67,7 +73,7 @@ namespace Pupverse
         public bool IsResolved => round.IsResolved;
 
         // Exposed for the existing HUD and editor tests.
-        public bool IsResolving => resolution != null;
+        public bool IsResolving => resolving;
 
         // Exposes the most recently resolved Top Trumps result.
         public BattleResult Result => round.Result;
@@ -99,48 +105,29 @@ namespace Pupverse
 
         void WireStatButtons()
         {
-            bool hasBindings =
-                statBindings != null &&
-                statBindings.Length > 0;
-
-            if (hasBindings)
+            if(statBindings!=null && statBindings.Length>0)
             {
-                foreach (StatButtonBinding binding in statBindings)
-                {
-                    if (binding == null || binding.button == null)
-                        continue;
-
-                    CardStat chosenStat = binding.stat;
-
-                    binding.button.onClick.AddListener(
-                        () => Choose(chosenStat)
-                    );
-                }
-
-                return;
+                if(statBindings.Length!=5 || statBindings.Any(b=>b==null || b.button==null || !Enum.IsDefined(typeof(CardStat),b.stat)) ||
+                   statBindings.Select(b=>b.stat).Distinct().Count()!=5 || statBindings.Select(b=>b.button).Distinct().Count()!=5)
+                { Debug.LogError("Assign one distinct button for each stat.",this); enabled=false; return; }
+                statBindings=statBindings.OrderBy(b=>(int)b.stat).ToArray();
+                statButtons=statBindings.Select(b=>b.button).ToArray();
             }
-
-            if (statButtons == null)
-                return;
-
-            for (int i = 0; i < statButtons.Length; i++)
+            if(statButtons==null) return;
+            for(int i=0;i<statButtons.Length;i++)
             {
-                Button button = statButtons[i];
-
-                if (button == null)
-                    continue;
-
-                int index = i;
-
-                button.onClick.AddListener(
-                    () => Choose((CardStat)index)
-                );
+                CardStat stat=(CardStat)i;
+                if(statButtons[i]!=null) statButtons[i].onClick.AddListener(()=>Choose(stat));
             }
         }
 
-        public void Choose(CardStat stat)
+        public void Choose(CardStat stat) => ChooseFor(stat,BattleTurnOwner.Player);
+        internal void ChooseForRival(CardStat stat) => ChooseFor(stat,BattleTurnOwner.Rival);
+        void ChooseFor(CardStat stat,BattleTurnOwner owner)
         {
-            if (resolution != null)
+            if(!isActiveAndEnabled || (matchController!=null && !matchController.CanChoose(owner)) ||
+                (cardAnimator!=null && cardAnimator.IsAttacking)) return;
+            if (IsResolving)
                 return;
 
             if (playerCard == null || opponentCard == null)
@@ -191,6 +178,7 @@ namespace Pupverse
 
             BattleResult result = round.Result;
 
+            resolving=true;
             ComparisonStarted?.Invoke(result);
 
             resolution = StartCoroutine(
@@ -302,7 +290,7 @@ namespace Pupverse
                 winnerHighlight.alpha = 1f;
             }
 
-            if (playerWon && victory != null)
+            if (playerWon && victory != null && cardAnimator == null)
             {
                 victory.Play(accent);
             }
@@ -316,6 +304,7 @@ namespace Pupverse
                         ? result.PlayerBoost > 0
                         : result.OpponentBoost > 0;
 
+                cardAnimator.SetCardIdentity((playerWon?playerCard:opponentCard).data);
                 bool animationStarted;
 
                 if (playerWon)
@@ -344,7 +333,7 @@ namespace Pupverse
                 }
             }
 
-            if (!draw && !GameSettings.ReducedMotion)
+            if (!draw && cardAnimator==null && !GameSettings.ReducedMotion)
             {
                 Transform winner =
                     playerWon
@@ -353,8 +342,8 @@ namespace Pupverse
 
                 if (winner != null)
                 {
-                    Vector3 originalScale =
-                        winner.localScale;
+                    Vector3 originalScale = winner.localScale;
+                    animatedUiCard=winner; originalUiScale=originalScale;
 
                     float elapsed = 0f;
                     const float pulseDuration = 0.55f;
@@ -381,8 +370,8 @@ namespace Pupverse
                         yield return null;
                     }
 
-                    winner.localScale =
-                        originalScale;
+                    winner.localScale = originalScale;
+                    animatedUiCard=null;
                 }
             }
 
@@ -409,7 +398,7 @@ namespace Pupverse
                     victory.Clear();
                 }
 
-                resolution = null;
+                resolution = null; resolving=false;
 
                 ResetUI();
 
@@ -421,12 +410,18 @@ namespace Pupverse
                 replayButton.interactable = true;
             }
 
-            resolution = null;
+            resolution = null; resolving=false;
+            RoundCompleted?.Invoke(result);
         }
 
         public void Replay()
         {
-            if (resolution != null)
+            if(matchController!=null) return;
+            PrepareRound();
+        }
+        internal void PrepareRound()
+        {
+            if (IsResolving)
                 return;
 
             round.Reset();
@@ -444,6 +439,19 @@ namespace Pupverse
 
             ResetUI();
         }
+
+        public void ResetSession()
+        {
+            AbortRound(); wins=losses=draws=0; ResetUI();
+        }
+        public void AbortRound()
+        {
+            StopAllCoroutines(); resolution=null; resolving=false; round.Reset();
+            if(cardAnimator!=null) cardAnimator.CancelAttack();
+            if(animatedUiCard!=null) animatedUiCard.localScale=originalUiScale;
+            animatedUiCard=null;
+        }
+        void OnDisable() { AbortRound(); }
 
         void ResetUI()
         {
@@ -474,8 +482,13 @@ namespace Pupverse
                 replayButton.interactable = false;
             }
 
+            if(cardAnimator!=null && playerCard!=null && playerCard.data!=null && statButtons!=null)
+                for(int i=0;i<statButtons.Length;i++)
+                {
+                    var label=statButtons[i]?.GetComponentInChildren<Text>();
+                    if(label!=null) label.text=((CardStat)i).ToString().ToUpperInvariant()+"\n"+playerCard.data.EffectiveValue((CardStat)i);
+                }
             UpdateScoreLabel();
-
             SelectionReady?.Invoke();
         }
 

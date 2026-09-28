@@ -119,6 +119,7 @@ namespace Pupverse.Tests
                 battle.statBindings[4-i] = new BattleController.StatButtonBinding { stat = (CardStat)i, button = battle.statButtons[i] };
             }
             battle.cardAnimator = animator;
+            battle.autoNextRound = false;
             battle.comparisonDuration = .06f;
             battle.winnerReadDuration = .06f;
             battle.resultHoldDuration = .06f;

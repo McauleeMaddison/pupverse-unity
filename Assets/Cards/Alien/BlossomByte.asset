@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 07586efbcd0f34aacbd2c3d63c1c8cd1, type: 3}
+  m_Name: BlossomByte
+  m_EditorClassIdentifier: Pupverse.Runtime::Pupverse.CardData
+  id: alien-blossom-byte
+  displayName: Blossom Byte
+  series: AlienPups
+  element: Dream Mist
+  year: 2025
+  rarity: 2
+  stats:
+    power: 69
+    speed: 78
+    intelligence: 85
+    defence: 67
+    luck: 92
+  abilityName: Mist Charm
+  abilityDescription: Blossom Byte wraps the field in dream mist, gaining +14 Luck and +8 Intelligence for one round.
+  abilityBoosts:
+    power: 0
+    speed: 0
+    intelligence: 8
+    defence: 0
+    luck: 14
+  fact: Blossom Byte enters the PupVerse arena with Mist Charm.
+  originalCardArt: {fileID: 2800000, guid: c7d8b496925c541e59cd1d7ee059e654, type: 3}
+  heroArt: {fileID: 0}
+  portraitUV:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 1
+    height: 1

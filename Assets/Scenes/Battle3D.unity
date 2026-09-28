@@ -3844,6 +3844,161 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 416417462}
   m_CullTransparentMesh: 1
+--- !u!1 &416956947
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 416956949}
+  - component: {fileID: 416956948}
+  - component: {fileID: 416956951}
+  - component: {fileID: 416956950}
+  m_Layer: 0
+  m_Name: BattleMatchController
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &416956948
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 416956947}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 02764dd7edf544efebb1fd3daa082374, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Pupverse.Runtime::Pupverse.BattleMatchController
+  availableCards:
+  - {fileID: 11400000, guid: c00ca273822d94ecbaed5861281b3bd8, type: 2}
+  - {fileID: 11400000, guid: 3c6aebfd1fcd3488fbe6da00ff53dfa8, type: 2}
+  - {fileID: 11400000, guid: 6bef7fe8293844163a09590796f5519c, type: 2}
+  - {fileID: 11400000, guid: d43653c30f92d4502879b81f28fa761d, type: 2}
+  - {fileID: 11400000, guid: aae4f193ab42c43559ec7150f4d4fa55, type: 2}
+  - {fileID: 11400000, guid: 61d191e1de4fc4dc8b3798105eea354a, type: 2}
+  - {fileID: 11400000, guid: 080be6c35e195473aa0a59075770b225, type: 2}
+  - {fileID: 11400000, guid: 1da83b1d397074e63aa577746a69a584, type: 2}
+  - {fileID: 11400000, guid: 7cbb4d29e38eb483889962d826108099, type: 2}
+  - {fileID: 11400000, guid: b83c8e796d0744e4fb9155d1ff8e6984, type: 2}
+  - {fileID: 11400000, guid: 2b28c58099422455d8ad7a43f5cf97f6, type: 2}
+  - {fileID: 11400000, guid: ff242e2a708c24262a7ee35e9ff40d57, type: 2}
+  - {fileID: 11400000, guid: 957a53848603047f5bda7a6d114fb6b5, type: 2}
+  - {fileID: 11400000, guid: f0fffd22f89a4455693c93ce68ad2a08, type: 2}
+  - {fileID: 11400000, guid: 9381de0623a4548899b1c13b9ed0208d, type: 2}
+  - {fileID: 11400000, guid: d752db25713a74e70ae4a7708664ab49, type: 2}
+  - {fileID: 11400000, guid: c6559da079be64826886b1f6e3edaa0a, type: 2}
+  - {fileID: 11400000, guid: 1b0dfca3d87954d79a23982bc7de38ee, type: 2}
+  - {fileID: 11400000, guid: 5878b7f8a27cf4872b2dc9610acefe21, type: 2}
+  - {fileID: 11400000, guid: c38142940b00644618fda8fb2c0d7609, type: 2}
+  - {fileID: 11400000, guid: cfd983d9b520c46fab7be61bfb921153, type: 2}
+  - {fileID: 11400000, guid: 10c533b6fe4e143388ef92d37891c77e, type: 2}
+  - {fileID: 11400000, guid: 6131bfaeec9964587a4f3d5184d03ca0, type: 2}
+  - {fileID: 11400000, guid: 7db62609f801541a4a2bce96f1cf018c, type: 2}
+  - {fileID: 11400000, guid: 31cec70bdf755425383c0f4edc4ecfd1, type: 2}
+  - {fileID: 11400000, guid: ee2104eb3d6444af6a509c746c86adda, type: 2}
+  - {fileID: 11400000, guid: 664235d71ee754249a897a2626491323, type: 2}
+  - {fileID: 11400000, guid: 0227f550866484755b088312560f57a1, type: 2}
+  - {fileID: 11400000, guid: 0f7265fb50e9346b590c0f25bd72eeae, type: 2}
+  - {fileID: 11400000, guid: 3164938be9e7a442a82ad3e4d8f59b22, type: 2}
+  - {fileID: 11400000, guid: 4ef580409b86946c1a6dfd496ea8b3ad, type: 2}
+  - {fileID: 11400000, guid: 1bbc7ebd407ea499194256fb858f14dd, type: 2}
+  - {fileID: 11400000, guid: 9d075995bb5974855a04a0aa5b1520c5, type: 2}
+  - {fileID: 11400000, guid: 7a7afbaa03a644afe8ef779dc0aa6d89, type: 2}
+  - {fileID: 11400000, guid: 8f8e02f5664bb400aaeffaf074307978, type: 2}
+  - {fileID: 11400000, guid: 7b0b0508ef0634eaa99b4ce555f30599, type: 2}
+  - {fileID: 11400000, guid: ddbc9629723c841b2843279727f39e66, type: 2}
+  - {fileID: 11400000, guid: 8a666e7c0fc164e9985488fff19660e8, type: 2}
+  - {fileID: 11400000, guid: 141d26c69bea54314b14e09388096a36, type: 2}
+  - {fileID: 11400000, guid: 2cfdfc6fd2ca44301bef6c0572771b6c, type: 2}
+  - {fileID: 11400000, guid: 289439fd8057f4fef8bd2be8bfd18c3a, type: 2}
+  - {fileID: 11400000, guid: 32d51f4cd24684a9a965ba3a5468a1c3, type: 2}
+  - {fileID: 11400000, guid: 7af632cd36423494eb51012e9653022e, type: 2}
+  - {fileID: 11400000, guid: d03af17b16bbb4accb5d7e777142e5f3, type: 2}
+  - {fileID: 11400000, guid: cda9288a67b704876a891a014a8dba8a, type: 2}
+  - {fileID: 11400000, guid: 46e1955c4a441485cad96d8f98c64f49, type: 2}
+  - {fileID: 11400000, guid: ac686c2bd509d4e0fb01a77aa14543bf, type: 2}
+  - {fileID: 11400000, guid: 2493724751ed74b42a02ab41d2f452f3, type: 2}
+  - {fileID: 11400000, guid: eccb1c5960e70429eb68ee8db175171f, type: 2}
+  - {fileID: 11400000, guid: 67c566aa3ec8145a1af6dcf84fe62555, type: 2}
+  - {fileID: 11400000, guid: a31eef178cd874a6b93c9e8d03fe5eda, type: 2}
+  - {fileID: 11400000, guid: 7de4647bf6642448badf4364a9504c37, type: 2}
+  - {fileID: 11400000, guid: 9c0ab735146594c98905d9f524555c2a, type: 2}
+  - {fileID: 11400000, guid: b24d4ffeea59340d9b8e848fc8271a48, type: 2}
+  - {fileID: 11400000, guid: e6a638641d5044110808ed20a39488bd, type: 2}
+  - {fileID: 11400000, guid: 5e4a8b38ad1d942c99fc3012fce9ef10, type: 2}
+  - {fileID: 11400000, guid: d679fe9ac7b174770b2085bbc41d564b, type: 2}
+  cardDisplay: {fileID: 416956951}
+  battle: {fileID: 1264139118}
+  playerStartingCards:
+  - {fileID: 11400000, guid: 0227f550866484755b088312560f57a1, type: 2}
+  - {fileID: 11400000, guid: cfd983d9b520c46fab7be61bfb921153, type: 2}
+  - {fileID: 11400000, guid: 289439fd8057f4fef8bd2be8bfd18c3a, type: 2}
+  - {fileID: 11400000, guid: c00ca273822d94ecbaed5861281b3bd8, type: 2}
+  - {fileID: 11400000, guid: ee2104eb3d6444af6a509c746c86adda, type: 2}
+  - {fileID: 11400000, guid: d43653c30f92d4502879b81f28fa761d, type: 2}
+  rivalStartingCards:
+  - {fileID: 11400000, guid: 1bbc7ebd407ea499194256fb858f14dd, type: 2}
+  - {fileID: 11400000, guid: 664235d71ee754249a897a2626491323, type: 2}
+  - {fileID: 11400000, guid: d03af17b16bbb4accb5d7e777142e5f3, type: 2}
+  - {fileID: 11400000, guid: 7b0b0508ef0634eaa99b4ce555f30599, type: 2}
+  - {fileID: 11400000, guid: 9c0ab735146594c98905d9f524555c2a, type: 2}
+  - {fileID: 11400000, guid: 2cfdfc6fd2ca44301bef6c0572771b6c, type: 2}
+  startingTurn: 0
+  startAutomatically: 0
+  rivalThinkDelay: 0.9
+  nextRoundDelay: 0.5
+--- !u!4 &416956949
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 416956947}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.625, z: 0.5}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &416956950
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 416956947}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 439f22767d381447fb045ce03d52f1ab, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Pupverse.Runtime::Pupverse.BattleHandSelection
+  match: {fileID: 416956948}
+  hud: {fileID: 2040079867}
+--- !u!114 &416956951
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 416956947}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 083da8fc229684eed843c779e039df7e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Pupverse.Runtime::Pupverse.BattleCardDisplay
+  playerRoot: {fileID: 1352482677}
+  rivalRoot: {fileID: 377911193}
+  playerFront: {fileID: 431192964}
+  rivalFront: {fileID: 891812835}
+  revealDuration: 0.36
 --- !u!1 &431192963
 GameObject:
   m_ObjectHideFlags: 0
@@ -10589,12 +10744,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Pupverse.Runtime::Pupverse.BattleController
   playerCard: {fileID: 1177843860}
   opponentCard: {fileID: 1869156542}
-  statButtons:
-  - {fileID: 466484749}
-  - {fileID: 1268857487}
-  - {fileID: 2061967331}
-  - {fileID: 1925175694}
-  - {fileID: 891395759}
   statBindings:
   - stat: 0
     button: {fileID: 466484749}
@@ -10606,6 +10755,12 @@ MonoBehaviour:
     button: {fileID: 1925175694}
   - stat: 4
     button: {fileID: 891395759}
+  statButtons:
+  - {fileID: 466484749}
+  - {fileID: 1268857487}
+  - {fileID: 2061967331}
+  - {fileID: 1925175694}
+  - {fileID: 891395759}
   replayButton: {fileID: 544836037}
   homeButton: {fileID: 917312227}
   resultTitle: {fileID: 1767257060}
@@ -10615,10 +10770,11 @@ MonoBehaviour:
   victory: {fileID: 722733747}
   winnerHighlight: {fileID: 259124503}
   cardAnimator: {fileID: 2040079863}
-  autoNextRound: 1
   comparisonDuration: 1.05
   winnerReadDuration: 0.65
   resultHoldDuration: 1.1
+  autoNextRound: 0
+  matchController: {fileID: 416956948}
 --- !u!114 &1264139119
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -18978,6 +19134,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Pupverse.Runtime::Pupverse.BattleHudPresentation
   layout: {fileID: 2040079865}
+  panelOpacity: 0.34
+  arenaShadeOpacity: 0.52
 --- !u!1 &2050960584
 GameObject:
   m_ObjectHideFlags: 0
@@ -19838,3 +19996,4 @@ SceneRoots:
   - {fileID: 1455536539}
   - {fileID: 739807746}
   - {fileID: 2040079864}
+  - {fileID: 416956949}

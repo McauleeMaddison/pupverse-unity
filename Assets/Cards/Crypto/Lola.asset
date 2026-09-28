@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 07586efbcd0f34aacbd2c3d63c1c8cd1, type: 3}
+  m_Name: Lola
+  m_EditorClassIdentifier: Pupverse.Runtime::Pupverse.CardData
+  id: crypto-lola
+  displayName: Lola
+  series: CryptoPups
+  element: Aqua Matrix
+  year: 2025
+  rarity: 4
+  stats:
+    power: 77
+    speed: 88
+    intelligence: 90
+    defence: 81
+    luck: 87
+  abilityName: Mirror Cache
+  abilityDescription: Lola mirrors incoming data streams, gaining +14 Intelligence and +12 Luck.
+  abilityBoosts:
+    power: 0
+    speed: 0
+    intelligence: 14
+    defence: 0
+    luck: 12
+  fact: Lola enters the PupVerse arena with Mirror Cache.
+  originalCardArt: {fileID: 2800000, guid: df744a215847f41258890339545496e2, type: 3}
+  heroArt: {fileID: 0}
+  portraitUV:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 1
+    height: 1

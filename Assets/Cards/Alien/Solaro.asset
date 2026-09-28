@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 07586efbcd0f34aacbd2c3d63c1c8cd1, type: 3}
+  m_Name: Solaro
+  m_EditorClassIdentifier: Pupverse.Runtime::Pupverse.CardData
+  id: alien-solaro
+  displayName: Solaro
+  series: AlienPups
+  element: Comet Flare
+  year: 2025
+  rarity: 4
+  stats:
+    power: 83
+    speed: 87
+    intelligence: 82
+    defence: 76
+    luck: 79
+  abilityName: Solar Stride
+  abilityDescription: Solaro surges with comet light, gaining +14 Power and +9 Speed for one round.
+  abilityBoosts:
+    power: 14
+    speed: 9
+    intelligence: 0
+    defence: 0
+    luck: 0
+  fact: Solaro enters the PupVerse arena with Solar Stride.
+  originalCardArt: {fileID: 2800000, guid: 2edf3cecdb2644a11b9e6366dab5b6ee, type: 3}
+  heroArt: {fileID: 0}
+  portraitUV:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 1
+    height: 1

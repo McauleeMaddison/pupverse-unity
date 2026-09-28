@@ -4,9 +4,13 @@ Editable Unity mobile game starter. Your project is on the Desktop, and its priv
 
 ## Open and play
 
-- **Unity:** double-click `Open in Unity.command`. Use Unity **6000.6.0f1**, open `Assets/Scenes/MainMenu.unity`, and press Play.
+- **Unity mobile battle:** double-click `Open in Unity.command`. Use Unity **6000.6.0f1**, choose **Pupverse → Open Mobile Battle**, then press Play. This opens `Assets/Scenes/Battle3D.unity`.
 - **VS Code:** double-click `Open in VS Code.command` or open `Pupverse.code-workspace`.
-- **Battle:** Enter the arena, then choose Power for a Raven victory or Speed for a Brooklyn victory. Play Again resets the round.
+- **Build your six:** tap a numbered slot, then a card in the scrolling collection. Picking a card already in your hand swaps its position. Move Earlier / Move Later sets the play order. Start Match saves the six selected IDs locally.
+- **Battle:** both sides start with six. Tap a stat on your turn. Base plus ability bonus is compared on both active cards. The winner places their own card and the captured opponent card at the back of their queue; both reveal the next card. The winner chooses the next stat; the local rival chooses from its own stats.
+- **Draws:** both cards enter a shared pot; the next winner takes it too. If one side cannot draw again, the other takes the pot and wins. If both run out simultaneously, the match is a draw.
+- **Match end:** capture all 12 cards to win, then edit your starting hand or play again. Captures affect this match only, not permanent collection ownership.
+- **Checks:** **Pupverse → Run Battle Checks (Temporary)** runs the battle checks and restores Battle3D afterwards. The older MainMenu / Battle scenes remain the original two-card demo.
 
 Everything can be edited manually without Codex.
 
@@ -17,7 +21,7 @@ Pupverse/
 ├── Assets/
 │   ├── Art/          Character art and interface textures
 │   ├── Cards/        Editable card data
-│   ├── Scenes/       MainMenu and Battle
+│   ├── Scenes/       Battle3D mobile battle plus legacy MainMenu and Battle
 │   ├── Prefabs/      Reusable hero and card
 │   ├── Scripts/      All game, UI and motion C# files
 │   └── Editor/       Build tools and Tests/

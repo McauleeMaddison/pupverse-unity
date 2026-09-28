@@ -961,6 +961,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 45302514}
+  - component: {fileID: 45302515}
   m_Layer: 0
   m_Name: Arena
   m_TagString: Untagged
@@ -999,6 +1000,24 @@ Transform:
   - {fileID: 377911193}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &45302515
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 45302513}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ebbc9aacd5d3f40f9b4d13d6ccce4ce1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Pupverse.Runtime::Pupverse.BattleArenaPresentation
+  floorMetallic: 0.72
+  floorSmoothness: 0.86
+  gridOpacity: 0.11
+  scanOpacity: 0.08
+  corePulseSpeed: 1.4
+  scanSpeed: 0.16
 --- !u!1 &58962412
 GameObject:
   m_ObjectHideFlags: 0
@@ -3999,7 +4018,15 @@ MonoBehaviour:
   rivalRoot: {fileID: 377911193}
   playerFront: {fileID: 431192964}
   rivalFront: {fileID: 891812835}
+  dealDuration: 0.48
   revealDuration: 0.36
+  settleDuration: 0.18
+  sideOffset: 0.85
+  liftHeight: 0.36
+  dealTilt: 8
+  settleOvershoot: 0.065
+  startingScale: 0.72
+  minimumFlipWidth: 0.045
 --- !u!114 &416956952
 MonoBehaviour:
   m_ObjectHideFlags: 0

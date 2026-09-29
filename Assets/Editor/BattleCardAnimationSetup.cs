@@ -183,6 +183,8 @@ namespace Pupverse.Editor
             if(shop==null) shop=Undo.AddComponent<CardPackShop>(match.gameObject);
             Undo.RecordObject(shop,"Connect card pack shop"); shop.progression=progression; shop.hud=hud;
             shop.foilShader=AssetDatabase.LoadAssetAtPath<Shader>("Assets/Shaders/PackFoil.shader");
+            shop.cardFoilShader=AssetDatabase.LoadAssetAtPath<Shader>("Assets/Shaders/CardFoil.shader");
+            display.cardFoilShader=shop.cardFoilShader;
             selector.progression=progression; selector.packShop=shop;
             var home=match.GetComponent<BattleHomeScreen>();
             if(home==null)home=Undo.AddComponent<BattleHomeScreen>(match.gameObject);

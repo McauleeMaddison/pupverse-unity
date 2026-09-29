@@ -24,6 +24,7 @@ namespace Pupverse
         public int version=1, coins;
         public List<OwnedCard> owned=new List<OwnedCard>();
         public List<string> rewardedMatches=new List<string>();
+        public List<string> featuredIds=new List<string>();
         public bool hasPending;
         public PackOpening pending;
     }
@@ -50,6 +51,20 @@ namespace Pupverse
         public static CollectionSave Starter(IEnumerable<CardData> cards,int coins)
         {
             return new CollectionSave {coins=Math.Max(0,coins),owned=cards.Where(c=>c!=null).Select(c=>c.id).Distinct().Select(id=>new OwnedCard{id=id,count=1}).ToList()};
+        }
+        // Older saves have no featured preference. Repair missing/unowned/retired IDs without rejecting the wallet.
+        public CardData[] Featured(CardData[] catalog,IEnumerable<CardData> fallback)
+        {
+            var available=(catalog??Array.Empty<CardData>()).Where(c=>c!=null && OwnedCount(c.id)>0 && c.originalCardArt!=null).GroupBy(c=>c.id).Select(g=>g.First()).ToArray();
+            return (state.featuredIds??new List<string>()).Select(id=>available.FirstOrDefault(c=>c.id==id))
+                .Concat(fallback??Array.Empty<CardData>()).Concat(available)
+                .Where(c=>c!=null && available.Any(a=>a.id==c.id)).GroupBy(c=>c.id).Select(g=>g.First()).Take(3).ToArray();
+        }
+        public bool SetFeatured(string[] ids,CardData[] catalog,out string error)
+        {
+            if(ids==null || ids.Length!=3 || ids.Distinct().Count()!=3 || ids.Any(id=>OwnedCount(id)<1 || !(catalog??Array.Empty<CardData>()).Any(c=>c!=null && c.id==id && c.originalCardArt!=null)))
+            {error="Choose three different cards you own.";return false;}
+            var next=Clone(state);next.featuredIds=ids.ToList();return Commit(next,out error);
         }
         public bool AwardMatch(string matchId,int coins)
         {

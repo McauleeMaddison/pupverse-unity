@@ -66,6 +66,34 @@ namespace Pupverse.Tests
             Assert.That(c.Pending.cardIds.All(id=>id=="AlienPupsMythic"),Is.True);
             Assert.That(PlayerCollection.Odds(pack,cards.ToArray(),weights),Is.EqualTo("Rare 60% · Epic 28% · Legendary 10% · Mythic 2%"));
         }
+        [Test] public void FeaturedCardsPersistWithoutChangingOwnershipCoinsOrPendingPack()
+        {
+            var c=Collection();var ids=cards.Skip(1).Take(3).Select(card=>card.id).Reverse().ToArray();
+            Assert.That(c.Open(pack,cards.ToArray(),weights,()=>0,out _),Is.True);
+            var receipt=c.Pending.cardIds;
+            Assert.That(c.SetFeatured(ids,cards.ToArray(),out _),Is.True);
+            c=new PlayerCollection(JsonUtility.FromJson<CollectionSave>(saved),_=>{});
+            CollectionAssert.AreEqual(ids,c.Featured(cards.ToArray(),cards.Take(3)).Select(card=>card.id));
+            Assert.That(c.Coins,Is.Zero);CollectionAssert.AreEqual(receipt,c.Pending.cardIds);
+            Assert.That(c.OwnedCount("AlienPupsRare"),Is.EqualTo(4));
+            Assert.That(c.SetFeatured(new[]{ids[0],ids[0],ids[1]},cards.ToArray(),out _),Is.False);
+            Assert.That(c.SetFeatured(cards.Skip(9).Take(3).Select(card=>card.id).ToArray(),cards.ToArray(),out _),Is.False);
+            Assert.That(c.SetFeatured(ids,cards.Take(1).ToArray(),out _),Is.False);
+            CollectionAssert.AreEqual(ids,c.Featured(cards.ToArray(),cards.Take(3)).Select(card=>card.id));
+        }
+        [Test] public void LegacyAndStaleFeaturedPreferencesFallBackAndFailedSaveDoesNotReplaceThem()
+        {
+            var state=PlayerCollection.Starter(cards.Take(4),10);state.featuredIds=null;
+            var c=new PlayerCollection(state,_=>throw new IOException("disk full"));
+            var original=c.Featured(cards.ToArray(),cards.Take(3));
+            Assert.That(original.Length,Is.EqualTo(3));
+            Assert.That(c.SetFeatured(cards.Skip(1).Take(3).Select(card=>card.id).ToArray(),cards.ToArray(),out _),Is.False);
+            CollectionAssert.AreEqual(original,c.Featured(cards.ToArray(),cards.Take(3)));
+            state.featuredIds=new List<string>{"retired",cards[0].id,cards[0].id};
+            c=new PlayerCollection(state,_=>{});
+            CollectionAssert.AreEqual(original,c.Featured(cards.ToArray(),cards.Take(3)));
+            Assert.That(c.Coins,Is.EqualTo(10));
+        }
         [Test] public void InvalidRollAndMalformedSaveAreRejected()
         {
             var c=Collection();Assert.That(c.Open(pack,cards.ToArray(),weights,()=>double.NaN,out _),Is.False);Assert.That(c.Coins,Is.EqualTo(10));

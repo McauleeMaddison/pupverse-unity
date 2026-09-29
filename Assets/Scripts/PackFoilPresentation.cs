@@ -18,6 +18,7 @@ namespace Pupverse
         Material[] faces;
         CardData[] contents;
         Texture2D cardBack;
+        Shader cardShader;
         Camera previewCamera;
         RenderTexture target;
         int pointer=int.MinValue,shown=-1;
@@ -25,8 +26,9 @@ namespace Pupverse
         bool revealing;
         Vector3[] fromPositions,fromScales;
         Quaternion[] fromRotations;
-        public void Initialize(Shader foilShader,Font font)
+        public void Initialize(Shader foilShader,Font font,Shader cardFoil)
         {
+            cardShader=cardFoil;
             stage=new GameObject("Pack preview stage").transform;stage.position=new Vector3(5000,5000,5000);
             previewCamera=new GameObject("Pack preview camera",typeof(Camera)).GetComponent<Camera>();
             previewCamera.transform.SetParent(stage,false);previewCamera.transform.localPosition=new Vector3(0,0,-6);
@@ -70,11 +72,11 @@ namespace Pupverse
                     Box("Card edge",cards[i],Vector3.zero,new Vector3(1.65f,2.5f,.045f),Material(new Color(.16f,.24f,.34f)));
                     var front=GameObject.CreatePrimitive(PrimitiveType.Quad);Destroy(front.GetComponent<Collider>());front.transform.SetParent(cards[i],false);
                     front.transform.localPosition=new Vector3(0,0,-.03f);front.transform.localScale=new Vector3(1.61f,2.46f,1);
-                    faces[i]=new Material(Shader.Find("Unlit/Texture"));owned.Add(faces[i]);faces[i].mainTexture=cardBack;front.GetComponent<MeshRenderer>().sharedMaterial=faces[i];
+                    faces[i]=CardFoilFinish.Create(cardShader);owned.Add(faces[i]);faces[i].mainTexture=cardBack;front.GetComponent<MeshRenderer>().sharedMaterial=faces[i];
                 }
             }
             foreach(var t in stage.GetComponentsInChildren<Transform>(true))t.gameObject.layer=31;
-            for(int i=0;i<cards.Length;i++){cards[i].gameObject.SetActive(false);faces[i].mainTexture=cardBack;}
+            for(int i=0;i<cards.Length;i++){cards[i].gameObject.SetActive(false);CardFoilFinish.Apply(faces[i],null);faces[i].mainTexture=cardBack;}
             shown=-1;IsSealed=true;pointer=int.MinValue;SetTear(0);
         }
         public void OnPointerDown(PointerEventData e)
@@ -125,6 +127,7 @@ namespace Pupverse
                 {
                     if(!cards[i].gameObject.activeSelf){cards[i].gameObject.SetActive(true);cards[i].localPosition=new Vector3((i-1.5f)*.35f,0,0);cards[i].localScale=Vector3.one*.7f;}
                     fromPositions[i]=cards[i].localPosition;fromScales[i]=cards[i].localScale;fromRotations[i]=cards[i].localRotation;
+                    CardFoilFinish.Apply(faces[i],i==index?contents[i]:null);
                     faces[i].mainTexture=i==index?contents[i]?.originalCardArt:cardBack;
                 }
             }
@@ -142,7 +145,7 @@ namespace Pupverse
             else if(!GameSettings.ReducedMotion && !revealing && shown>=0)cards[shown].localRotation=Quaternion.Euler(Mathf.Sin(Time.unscaledTime)*2,Mathf.Sin(Time.unscaledTime*.9f)*6,0);
             RenderPreview();
         }
-        public void RenderPreview(){if(stage!=null && stage.gameObject.activeSelf)previewCamera.Render();}
+        public void RenderPreview(){if(stage!=null && stage.gameObject.activeSelf){if(faces!=null)foreach(var face in faces)CardFoilFinish.Tick(face);previewCamera.Render();}}
         void OnEnable(){if(stage!=null)stage.gameObject.SetActive(true);}
         void OnDisable(){if(stage!=null)stage.gameObject.SetActive(false);pointer=int.MinValue;}
         void OnDestroy(){if(stage!=null)Destroy(stage.gameObject);foreach(var o in owned)if(o!=null)Destroy(o);}

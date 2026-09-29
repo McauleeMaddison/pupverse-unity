@@ -17,8 +17,9 @@ namespace Pupverse
         Text eyebrow,battleSubtitle,cardsSubtitle,packsSubtitle,showcaseHint;
         CanvasGroup menuGroup;
         float openedAt;
-        Text title,tagline,wallet,caption,modalTitle,modalBody,motionLabel;
-        Button battle,cards,packs,settings,help,back,motion;
+        Text title,tagline,wallet,modalTitle,modalBody,motionLabel;
+        Button battle,cards,packs,settings,help,back,motion,featured;
+        FeaturedCardSelection featuredPicker;
         HomeCardShowcase heroStage;
         Font font;
         bool built;
@@ -44,9 +45,11 @@ namespace Pupverse
             walletPanel=Rect("Coin capsule",root);var walletSurface=walletPanel.gameObject.AddComponent<BattleHudGraphic>();walletSurface.shape=BattleHudGraphic.Shape.Panel;walletSurface.accent=new Color(1,.76f,.3f);walletSurface.surfaceOpacity=.65f;walletSurface.raycastTarget=false;
             wallet=Label("Home wallet",walletPanel,"",12,new Color(1,.85f,.5f));Stretch(wallet.rectTransform);wallet.alignment=TextAnchor.MiddleCenter;
             hero=Rect("Home 3D card",root);hero.gameObject.AddComponent<RawImage>().raycastTarget=true;
-            heroStage=hero.gameObject.AddComponent<HomeCardShowcase>();heroStage.Initialize(match.StartingHand.Take(3).ToArray(),shop.foilShader);
+            heroStage=hero.gameObject.AddComponent<HomeCardShowcase>();heroStage.Initialize(FeaturedCards(),shop.foilShader,shop.cardFoilShader);
             showcaseHint=Label("Showcase hint",root,"",9,new Color(.45f,.64f,.77f));showcaseHint.alignment=TextAnchor.MiddleCenter;
-            caption=Label("Home invitation",root,"YOUR COLLECTION. YOUR ADVANTAGE.",10,Color.white);caption.alignment=TextAnchor.MiddleCenter;
+            featured=Button("EDIT FEATURED CARDS   ›",root,OpenFeatured,11);
+            featured.GetComponent<BattleHudGraphic>().surfaceOpacity=.22f;
+            featuredPicker=gameObject.AddComponent<FeaturedCardSelection>();featuredPicker.Initialize(root.parent,match,progression,font,ShowHome);
             battle=Button("BATTLE ARENA     ›",root,OpenHand,21);battle.GetComponent<BattleMenuMotion>().featured=true;
             battle.GetComponent<BattleHudGraphic>().surfaceOpacity=.86f;
             battleSubtitle=Label("Battle invitation",battle.transform,"BUILD YOUR SIX  /  TAKE THE STACK",9,Cyan);
@@ -65,8 +68,10 @@ namespace Pupverse
         {
             if(!built || match.IsMatchRunning)return;
             hand.HideForHome();hud.SetVisible(false);root.gameObject.SetActive(true);root.SetAsLastSibling();
-            modal.gameObject.SetActive(false);hero.gameObject.SetActive(true);openedAt=Time.unscaledTime;RefreshWallet();Canvas.ForceUpdateCanvases();LateUpdate();
+            modal.gameObject.SetActive(false);hero.gameObject.SetActive(true);heroStage.SetCards(FeaturedCards());openedAt=Time.unscaledTime;RefreshWallet();Canvas.ForceUpdateCanvases();LateUpdate();
         }
+        CardData[] FeaturedCards() => progression.Collection?.Featured(match.availableCards,match.StartingHand)??System.Array.Empty<CardData>();
+        public void OpenFeatured(){if(!built || match.IsMatchRunning)return;Hide();featuredPicker.Open(FeaturedCards());}
         public void OpenHand(){if(!built || match.IsMatchRunning)return;Hide();match.EditHand();}
         public void OpenPacks(){if(!built || match.IsMatchRunning)return;Hide();shop.Open(ShowHome);}
         public void OpenSettings()
@@ -88,6 +93,7 @@ namespace Pupverse
         {
             if(match!=null)match.MatchStarted-=Hide;
             if(progression?.Collection!=null)progression.Collection.Changed-=RefreshWallet;
+            if(featuredPicker!=null)Destroy(featuredPicker);
             if(root!=null)Destroy(root.gameObject);
         }
         void LateUpdate()
@@ -99,12 +105,12 @@ namespace Pupverse
             Place(title.rectTransform,20,h-76,w-40,44);Place(tagline.rectTransform,22,h-96,w-44,20);
             Place(walletPanel,w-124,h-136,104,32);
             // The stage keeps its render aspect, with three cards framed above navigation.
-            float hh=wide?Mathf.Min(290,h-95):Mathf.Min((w+16)/1.125f,h-400),hw=hh*1.125f;
+            float hh=wide?Mathf.Min(290,h-95):Mathf.Min((w+16)/1.125f,h-426),hw=hh*1.125f;
             float cx=wide?w*.25f:w*.5f;
-            Place(hero,cx-hw/2,wide?20:Mathf.Max(268,h-142-hh),hw,hh);
+            Place(hero,cx-hw/2,wide?42:Mathf.Max(286,h-142-hh),hw,hh);
             showcaseHint.gameObject.SetActive(!wide);showcaseHint.text=GameSettings.ReducedMotion?"YOUR FEATURED CARDS":"DRAG TO EXPLORE";Place(showcaseHint.rectTransform,20,hero.anchoredPosition.y+2,w-40,18);
             float x=wide?w*.52f:20,bw=wide?w*.45f:w-40;
-            Place(caption.rectTransform,wide?20:x,wide?7:246,wide?w*.45f:bw,20);
+            Place((RectTransform)featured.transform,wide?20:x,wide?7:240,wide?w*.45f:bw,44);
             Place((RectTransform)battle.transform,x,154,bw,80);
             Place((RectTransform)cards.transform,x,72,(bw-10)/2,72);Place((RectTransform)packs.transform,x+(bw+10)/2,72,(bw-10)/2,72);
             Place((RectTransform)settings.transform,x,16,(bw-10)/2,44);Place((RectTransform)help.transform,x+(bw+10)/2,16,(bw-10)/2,44);

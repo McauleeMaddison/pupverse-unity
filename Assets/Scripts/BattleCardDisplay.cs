@@ -24,6 +24,9 @@ namespace Pupverse
         public Renderer playerFront;
         public Renderer rivalFront;
 
+        public Shader cardFoilShader;
+        Material playerSource,rivalSource,playerFoil,rivalFoil;
+
         [Header("Premium Deal Animation")]
         [Min(0f)]
         public float dealDuration = 0.48f;
@@ -559,6 +562,19 @@ namespace Pupverse
                 return;
             }
 
+            if(cardFoilShader!=null)
+            {
+                if(target==playerFront)
+                {
+                    if(playerFoil==null){playerSource=target.sharedMaterial;playerFoil=CardFoilFinish.Create(cardFoilShader);target.sharedMaterial=playerFoil;}
+                    CardFoilFinish.Apply(playerFoil,card);
+                }
+                else if(target==rivalFront)
+                {
+                    if(rivalFoil==null){rivalSource=target.sharedMaterial;rivalFoil=CardFoilFinish.Create(cardFoilShader);target.sharedMaterial=rivalFoil;}
+                    CardFoilFinish.Apply(rivalFoil,card);
+                }
+            }
             target.GetPropertyBlock(
                 working
             );
@@ -657,8 +673,11 @@ namespace Pupverse
                 false;
         }
 
+        void LateUpdate(){CardFoilFinish.Tick(playerFoil);CardFoilFinish.Tick(rivalFoil);}
         void OnDisable()
         {
+            if(playerFoil!=null){if(playerFront!=null)playerFront.sharedMaterial=playerSource;Destroy(playerFoil);playerFoil=null;}
+            if(rivalFoil!=null){if(rivalFront!=null)rivalFront.sharedMaterial=rivalSource;Destroy(rivalFoil);rivalFoil=null;}
             CancelReveal();
 
             if (!captured)

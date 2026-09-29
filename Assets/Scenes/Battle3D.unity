@@ -4026,6 +4026,7 @@ MonoBehaviour:
   rivalRoot: {fileID: 377911193}
   playerFront: {fileID: 431192964}
   rivalFront: {fileID: 891812835}
+  cardFoilShader: {fileID: 4800000, guid: 2aa862b4e1184906bd499da60dfceffd, type: 3}
   dealDuration: 0.48
   revealDuration: 0.36
   settleDuration: 0.18
@@ -4092,6 +4093,7 @@ MonoBehaviour:
   progression: {fileID: 416956955}
   hud: {fileID: 2040079867}
   foilShader: {fileID: 4800000, guid: 14a0bfc6e48a4e82b88b883d77a9d520, type: 3}
+  cardFoilShader: {fileID: 4800000, guid: 2aa862b4e1184906bd499da60dfceffd, type: 3}
 --- !u!114 &416956955
 MonoBehaviour:
   m_ObjectHideFlags: 0

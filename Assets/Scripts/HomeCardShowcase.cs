@@ -11,6 +11,8 @@ namespace Pupverse
         readonly List<Object> resources=new List<Object>();
         Transform stage,turntable,orbit;
         readonly Transform[] cards=new Transform[3];
+        readonly Material[] faces=new Material[3];
+        public string[] FeaturedIds {get;private set;}=System.Array.Empty<string>();
         readonly Transform[] sparks=new Transform[14];
         Camera preview;
         RenderTexture target;
@@ -20,7 +22,7 @@ namespace Pupverse
         bool initialized;
         public int VisibleCardCount => initialized?cards.Length:0;
         public Vector2 Tilt => tilt;
-        public void Initialize(CardData[] collection,Shader metal)
+        public void Initialize(CardData[] collection,Shader metal,Shader cardFoil)
         {
             stage=new GameObject("Home showcase stage").transform;stage.position=new Vector3(5200,5000,5000);
             preview=new GameObject("Home showcase camera",typeof(Camera)).GetComponent<Camera>();preview.transform.SetParent(stage,false);
@@ -45,18 +47,28 @@ namespace Pupverse
                 var edge=new Material(metal){color=i==0?new Color(.15f,.75f,1):new Color(.48f,.22f,.85f)};resources.Add(edge);
                 Primitive("Bevel",PrimitiveType.Cube,cards[i],Vector3.zero,new Vector3(1.64f,2.5f,.07f),edge);
                 var face=Primitive("Original artwork",PrimitiveType.Quad,cards[i],new Vector3(0,0,-.043f),new Vector3(1.59f,2.44f,1),null);
-                var material=new Material(Shader.Find("Unlit/Texture"));material.mainTexture=collection[i%collection.Length].originalCardArt;resources.Add(material);face.GetComponent<Renderer>().sharedMaterial=material;
+                var material=CardFoilFinish.Create(cardFoil);faces[i]=material;resources.Add(material);face.GetComponent<Renderer>().sharedMaterial=material;
             }
             for(int i=0;i<sparks.Length;i++)
                 sparks[i]=Primitive("Orbit mote "+i,PrimitiveType.Quad,stage,Vector3.zero,Vector3.one*(i%3==0?.027f:.013f),i%2==0?cyan:violet);
             foreach(var t in stage.GetComponentsInChildren<Transform>())t.gameObject.layer=31;
-            initialized=true;openedAt=Time.unscaledTime;Pose();RenderPreview();
+            SetCards(collection);initialized=true;openedAt=Time.unscaledTime;Pose();RenderPreview();
+        }
+        public void SetCards(CardData[] selection)
+        {
+            FeaturedIds=System.Array.ConvertAll(selection,c=>c.id);
+            for(int i=0;i<faces.Length;i++)
+            {
+                bool visible=i<selection.Length;cards[i].gameObject.SetActive(visible);
+                CardFoilFinish.Apply(faces[i],visible?selection[i]:null);
+            }
         }
         void OnEnable(){openedAt=Time.unscaledTime;pointer=int.MinValue;touch=tilt=Vector2.zero;if(stage!=null)stage.gameObject.SetActive(true);}
         void OnDisable(){pointer=int.MinValue;touch=tilt=Vector2.zero;if(stage!=null)stage.gameObject.SetActive(false);}
         void LateUpdate(){RenderPreview();}
         void Pose()
         {
+            foreach(var face in faces)CardFoilFinish.Tick(face);
             bool reduced=GameSettings.ReducedMotion;float time=reduced?0:Time.unscaledTime-openedAt;
             float entry=reduced?1:Mathf.SmoothStep(0,1,Mathf.Clamp01(time/.7f));
             tilt=reduced?Vector2.zero:Vector2.Lerp(tilt,touch,1-Mathf.Exp(-Time.unscaledDeltaTime*8));

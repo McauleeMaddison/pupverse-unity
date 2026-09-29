@@ -11,6 +11,7 @@ namespace Pupverse
         public BattleProgression progression;
         public BattleHudPresentation hud;
         public Shader foilShader;
+        public Shader cardFoilShader;
         PackFoilPresentation foil;
         RectTransform root,offerRoot,revealRoot,packVisual;
         Text wallet,title,subtitle,cardName,cardInfo,status,actionLabel;
@@ -59,7 +60,7 @@ namespace Pupverse
             ring=Graphic("Opening energy",revealRoot,BattleHudGraphic.Shape.Ring,Cyan);
             packVisual=Rect("3D pack stage",revealRoot);
             packVisual.gameObject.AddComponent<RawImage>();foil=packVisual.gameObject.AddComponent<PackFoilPresentation>();
-            foil.Initialize(foilShader,font);foil.TearCompleted=BeginTear;
+            foil.Initialize(foilShader,font,cardFoilShader);foil.TearCompleted=BeginTear;
             cardName=Label("Pulled name",revealRoot,"",19,Color.white);
             cardInfo=Label("Pulled stats",revealRoot,"",12,Muted);
             action=Button("REVEAL",root,Next); actionLabel=action.GetComponentInChildren<Text>();

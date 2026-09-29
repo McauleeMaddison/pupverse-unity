@@ -304,6 +304,40 @@ namespace Pupverse.Tests
             selector.BeginMatch();yield return Ready();Assert.That(match.IsMatchRunning,Is.True);home.ShowHome();Assert.That(home.IsOpen,Is.False);
         }
 
+        [UnityTest] public IEnumerator FeaturedPickerSavesOwnedCardsIndependentlyAndCancelLeavesSelectionUntouched()
+        {
+            GameSettings.ReducedMotion=true;
+            var home=match.GetComponent<BattleHomeScreen>();home.ShowHome();yield return null;
+            var stage=Object.FindAnyObjectByType<HomeCardShowcase>();var starting=stage.FeaturedIds.ToArray();
+            var battleHand=selector.SelectedHand.ToArray();var collection=match.progression.Collection;
+            home.OpenFeatured();yield return null;
+            var picker=match.GetComponent<FeaturedCardSelection>();Assert.That(picker.IsOpen,Is.True);
+            Capture("featured-picker",390,844);Capture("featured-picker-compact",390,640);Capture("featured-picker-landscape",844,390);
+            var owned=match.availableCards.Where(match.progression.Owns).ToArray();
+            picker.SelectSlot(0);picker.ChooseCard(owned.First(c=>!starting.Contains(c.id)).id);
+            var chosen=picker.Draft.Select(c=>c.id).ToArray();picker.ChooseCard("not-owned");CollectionAssert.AreEqual(chosen,picker.Draft.Select(c=>c.id));
+            picker.SelectSlot(2);picker.ChooseCard(chosen[0]);Assert.That(picker.Draft.Select(c=>c.id).Distinct().Count(),Is.EqualTo(3));
+            chosen=picker.Draft.Select(c=>c.id).ToArray();Assert.That(picker.Save(),Is.True);yield return null;
+            Assert.That(home.IsOpen,Is.True);CollectionAssert.AreEqual(chosen,stage.FeaturedIds);CollectionAssert.AreEqual(battleHand,selector.SelectedHand);
+            var loaded=new PlayerCollection(JsonUtility.FromJson<CollectionSave>(PlayerPrefs.GetString(BattleProgression.SaveKey)),_=>{});
+            CollectionAssert.AreEqual(chosen,loaded.Featured(match.availableCards,match.StartingHand).Select(c=>c.id));
+            home.OpenFeatured();picker.SelectSlot(0);picker.ChooseCard(starting[0]);picker.Cancel();yield return null;
+            CollectionAssert.AreEqual(chosen,stage.FeaturedIds);CollectionAssert.AreEqual(battleHand,selector.SelectedHand);
+            stage.RenderPreview();Capture("featured-foil",390,844);
+            var shader=match.GetComponent<CardPackShop>().cardFoilShader;
+            Assert.That(shader,Is.Not.Null);Assert.That(shader.isSupported,Is.True);Assert.That(UnityEditor.ShaderUtil.ShaderHasError(shader),Is.False);
+        }
+        [UnityTest] public IEnumerator ArenaFoilTracksRarityAndRestoresOriginalMaterials()
+        {
+            GameSettings.ReducedMotion=true;var display=match.cardDisplay;var original=display.playerFront.sharedMaterial;
+            var card=ScriptableObject.CreateInstance<CardData>();temporary.Add(card);card.id="foil-test";card.rarity=CardRarity.Legendary;card.originalCardArt=Texture2D.whiteTexture;
+            yield return display.Reveal(card,card);yield return null;
+            var foil=display.playerFront.sharedMaterial;Assert.That(foil,Is.Not.SameAs(original));Assert.That(foil.shader.name,Is.EqualTo("Pupverse/CollectibleCardFoil"));
+            Assert.That(foil.GetFloat("_FoilAmount"),Is.GreaterThan(.5f));Assert.That(foil.GetFloat("_FoilTime"),Is.Zero);
+            card.rarity=CardRarity.Common;yield return display.Reveal(card,card);Assert.That(foil.GetFloat("_FoilAmount"),Is.Zero);
+            display.enabled=false;Assert.That(display.playerFront.sharedMaterial,Is.SameAs(original));
+        }
+
         static void Capture(string name,int width=0,int height=0)
         {
             string folder=Path.Combine(Application.temporaryCachePath,"BattleMatchChecks"); Directory.CreateDirectory(folder);
@@ -331,6 +365,7 @@ namespace Pupverse.Tests
                     var shop=Object.FindAnyObjectByType<CardPackShop>();shop.SendMessage("LateUpdate");
                     Object.FindAnyObjectByType<BattleHomeScreen>()?.SendMessage("LateUpdate");
                     Object.FindAnyObjectByType<BattleHandSelection>()?.SendMessage("LateUpdate");
+                    Object.FindAnyObjectByType<FeaturedCardSelection>()?.SendMessage("LateUpdate");
                     Canvas.ForceUpdateCanvases();foreach(var stage in Object.FindObjectsByType<PackFoilPresentation>())stage.RenderPreview();foreach(var stage in Object.FindObjectsByType<HomeCardShowcase>())stage.RenderPreview();camera.Render();RenderTexture.active=rt;
                     texture.ReadPixels(new Rect(0,0,rt.width,rt.height),0,0);texture.Apply();File.WriteAllBytes(path,texture.EncodeToPNG());
                 }

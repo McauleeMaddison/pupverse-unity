@@ -21,6 +21,9 @@ namespace Pupverse
         Button battle,cards,packs,settings,help,back,motion,featured;
         FeaturedCardSelection featuredPicker;
         HomeCardShowcase heroStage;
+        PlayerAccountController accounts;
+        PlayerAccountScreen accountScreen;
+        Button account;
         Font font;
         bool built;
         static readonly Color Cyan=new Color(.25f,.93f,1);
@@ -46,6 +49,11 @@ namespace Pupverse
             tagline=Label("Home tagline",root,"YOUR NEXT LEGEND STARTS HERE",10,Cyan);
             walletPanel=Rect("Coin capsule",root);var walletSurface=walletPanel.gameObject.AddComponent<BattleHudGraphic>();walletSurface.shape=BattleHudGraphic.Shape.Panel;walletSurface.accent=new Color(1,.76f,.3f);walletSurface.surfaceOpacity=.65f;walletSurface.raycastTarget=false;
             wallet=Label("Home wallet",walletPanel,"",12,new Color(1,.85f,.5f));Stretch(wallet.rectTransform);wallet.alignment=TextAnchor.MiddleCenter;
+            accounts=GetComponent<PlayerAccountController>();if(accounts==null)accounts=gameObject.AddComponent<PlayerAccountController>();
+            account=Button("GUEST / ACCOUNT",root,OpenAccount,10);
+            account.GetComponent<BattleHudGraphic>().surfaceOpacity=.3f;
+            accountScreen=gameObject.AddComponent<PlayerAccountScreen>();accountScreen.Initialize(root.parent,accounts.Service,font,ShowHome);
+            accounts.Service.Changed+=RefreshAccount;RefreshAccount();
             hero=Rect("Home 3D card",root);hero.gameObject.AddComponent<RawImage>().raycastTarget=true;
             heroStage=hero.gameObject.AddComponent<HomeCardShowcase>();heroStage.Initialize(FeaturedCards(),shop.foilShader,shop.cardFoilShader);
             showcaseHint=Label("Showcase hint",root,"",9,new Color(.45f,.64f,.77f));showcaseHint.alignment=TextAnchor.MiddleCenter;
@@ -73,6 +81,8 @@ namespace Pupverse
             modal.gameObject.SetActive(false);hero.gameObject.SetActive(true);heroStage.SetCards(FeaturedCards());openedAt=Time.unscaledTime;RefreshWallet();Canvas.ForceUpdateCanvases();LateUpdate();
         }
         CardData[] FeaturedCards() => progression.Collection?.Featured(match.availableCards,match.StartingHand)??System.Array.Empty<CardData>();
+        void RefreshAccount(){if(account!=null)account.GetComponentInChildren<Text>().text=accounts.Service.IsSignedIn?"PLAYER / ACCOUNT":"GUEST / ACCOUNT";}
+        public void OpenAccount(){if(!built || match.IsMatchRunning)return;Hide();accountScreen.Open();}
         public void OpenFeatured(){if(!built || match.IsMatchRunning)return;Hide();featuredPicker.Open(FeaturedCards());}
         public void OpenHand(){if(!built || match.IsMatchRunning)return;Hide();match.EditHand();}
         public void OpenPacks(){if(!built || match.IsMatchRunning)return;Hide();shop.Open(ShowHome);}
@@ -95,6 +105,8 @@ namespace Pupverse
         {
             if(match!=null)match.MatchStarted-=Hide;
             if(progression?.Collection!=null)progression.Collection.Changed-=RefreshWallet;
+            if(accounts!=null)accounts.Service.Changed-=RefreshAccount;
+            if(accountScreen!=null)Destroy(accountScreen);
             if(featuredPicker!=null)Destroy(featuredPicker);
             if(root!=null)Destroy(root.gameObject);
         }
@@ -106,6 +118,7 @@ namespace Pupverse
             Place(eyebrow.rectTransform,22,h-28,w-44,16);
             Place(title.rectTransform,20,h-76,w-40,44);Place(tagline.rectTransform,22,h-96,w-44,20);
             Place(walletPanel,w-124,h-136,104,32);
+            Place((RectTransform)account.transform,20,h-144,Mathf.Min(156,w-160),44);
             // The stage keeps its render aspect, with three cards framed above navigation.
             float hh=wide?Mathf.Min(290,h-95):Mathf.Min((w+16)/1.125f,h-426),hw=hh*1.125f;
             float cx=wide?w*.25f:w*.5f;

@@ -366,6 +366,22 @@ namespace Pupverse.Tests
             }
         }
 
+        [UnityTest] public IEnumerator AccountScreensKeepHomeFirstAndGuestProgressIntact()
+        {
+            var home=match.GetComponent<BattleHomeScreen>();home.ShowHome();yield return null;
+            string before=PlayerPrefs.GetString(BattleProgression.SaveKey);int coins=match.progression.Collection.Coins;
+            home.OpenAccount();var account=match.GetComponent<PlayerAccountScreen>();Assert.That(account.IsOpen,Is.True);Assert.That(home.IsOpen,Is.False);
+            Capture("account-sign-in",390,844);Capture("account-compact",390,640);Capture("account-landscape",844,390);
+            Assert.That(match.GetComponent<PlayerAccountController>().Service.EmailAvailable,Is.False,"Tests must not connect to a live Firebase project");
+            account.SetMode(AccountAction.CreateAccount);Capture("account-create",390,844);
+            account.SetCredentials("player@example.com","test-password","test-password");var submit=account.Submit();while(!submit.IsCompleted)yield return null;Assert.That(submit.Result,Is.False);
+            foreach(var field in Object.FindObjectsByType<InputField>())if(field.contentType==InputField.ContentType.Password)Assert.That(field.text,Is.Empty);
+            account.SetMode(AccountAction.ResetPassword);Capture("account-reset",390,844);
+            account.ContinueAsGuest();Assert.That(home.IsOpen,Is.True);Assert.That(account.IsOpen,Is.False);
+            Assert.That(match.progression.Collection.Coins,Is.EqualTo(coins));Assert.That(PlayerPrefs.GetString(BattleProgression.SaveKey),Is.EqualTo(before));
+            home.OpenHand();Assert.That(selector.IsOpen,Is.True);
+        }
+
         static void Capture(string name,int width=0,int height=0)
         {
             string folder=Path.Combine(Application.temporaryCachePath,"BattleMatchChecks"); Directory.CreateDirectory(folder);
@@ -394,6 +410,7 @@ namespace Pupverse.Tests
                     Object.FindAnyObjectByType<BattleHomeScreen>()?.SendMessage("LateUpdate");
                     Object.FindAnyObjectByType<BattleHandSelection>()?.SendMessage("LateUpdate");
                     Object.FindAnyObjectByType<FeaturedCardSelection>()?.SendMessage("LateUpdate");
+                    Object.FindAnyObjectByType<PlayerAccountScreen>()?.SendMessage("LateUpdate");
                     Canvas.ForceUpdateCanvases();foreach(var stage in Object.FindObjectsByType<PackFoilPresentation>())stage.RenderPreview();foreach(var stage in Object.FindObjectsByType<HomeCardShowcase>())stage.RenderPreview();camera.Render();RenderTexture.active=rt;
                     texture.ReadPixels(new Rect(0,0,rt.width,rt.height),0,0);texture.Apply();File.WriteAllBytes(path,texture.EncodeToPNG());
                 }

@@ -17,6 +17,7 @@ namespace Pupverse.Tests
         public IEnumerator SetUp()
         {
             EditorSceneManager.OpenScene("Assets/Scenes/Battle3D.unity");
+            Object.FindAnyObjectByType<BattleHomeScreen>().enabled=false;
             Object.FindAnyObjectByType<BattleHandSelection>().enabled=false;
             Object.FindAnyObjectByType<BattleMatchController>().enabled=false;
             var singleRound=Object.FindAnyObjectByType<BattleController>();

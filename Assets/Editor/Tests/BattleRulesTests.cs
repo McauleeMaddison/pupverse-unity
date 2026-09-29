@@ -34,7 +34,9 @@ namespace Pupverse.Tests
         [Test] public void StarterContentIsComplete()
         {
             foreach(var card in new[]{raven,brooklyn}) {Assert.That(card.fact,Is.Not.Empty);Assert.That(card.originalCardArt,Is.Not.Null);Assert.That(card.id,Is.Not.Empty);}
-            Assert.That(raven.heroArt,Is.Not.Null);Assert.That(EditorBuildSettings.scenes.Length,Is.EqualTo(2));
+            Assert.That(raven.heroArt,Is.Not.Null);Assert.That(EditorBuildSettings.scenes.Length,Is.EqualTo(3));
+            Assert.That(EditorBuildSettings.scenes[0].path,Is.EqualTo("Assets/Scenes/Battle3D.unity"));
+            Assert.That(EditorBuildSettings.scenes[0].enabled,Is.True);
         }
     }
 }

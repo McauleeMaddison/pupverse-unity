@@ -11,6 +11,13 @@ namespace Pupverse
     {
         public BattleMatchController match;
         public BattleHudPresentation hud;
+        public BattleProgression progression;
+        public CardPackShop packShop;
+        public BattleHomeScreen home;
+        Button homeButton;
+        readonly System.Collections.Generic.List<GameObject> collectionEntries=new System.Collections.Generic.List<GameObject>();
+        Button packs;
+        int ownedTotal;
         const string SaveKey="Pupverse.StartingHand.v1";
         [Serializable] sealed class SavedHand { public string[] ids; }
         CardData[] cards, hand;
@@ -45,23 +52,27 @@ namespace Pupverse
                 }
             }
             catch(ArgumentException) { /* An old or malformed local save falls back to the scene loadout. */ }
+            if(progression!=null && hand.Any(c=>!progression.Owns(c)))
+                hand=cards.Where(progression.Owns).Take(6).ToArray();
             font=match.Battle.resultTitle.font;
             Build(); built=true; Subscribe();
             if(match.IsMatchRunning) Hide(); else Show();
         }
         void OnEnable() { if(built) { Subscribe(); if(!match.IsMatchRunning) Show(); } }
-        void Subscribe() { match.MatchStarted+=Hide; match.MatchEnded+=End; match.HandSelectionOpened+=Show; }
+        void Subscribe() { if(progression?.Collection!=null) progression.Collection.Changed+=RefreshOwnership; match.MatchStarted+=Hide; match.MatchEnded+=End; match.HandSelectionOpened+=Show; }
         void OnDisable()
         {
             if(!built) return;
+            if(progression?.Collection!=null) progression.Collection.Changed-=RefreshOwnership;
             match.MatchStarted-=Hide; match.MatchEnded-=End; match.HandSelectionOpened-=Show;
             if(root!=null) root.gameObject.SetActive(false);
             if(hud!=null) hud.SetVisible(true);
         }
         void OnDestroy() { if(root!=null) Destroy(root.gameObject); }
+        public void HideForHome(){if(root!=null)root.gameObject.SetActive(false);}
         public bool SelectCard(CardData card)
         {
-            if(!IsOpen || results || Array.IndexOf(cards,card)<0) return false;
+            if(hand.Length!=6 || !IsOpen || results || (packShop!=null && packShop.IsOpen) || Array.IndexOf(cards,card)<0 || (progression!=null && !progression.Owns(card))) return false;
             int existing=Array.IndexOf(hand,card);
             if(existing>=0) hand[existing]=hand[selected];
             hand[selected]=card; Refresh(); return true;
@@ -69,21 +80,23 @@ namespace Pupverse
         public void SelectSlot(int index) { if(index<0 || index>=6) return; selected=index; Refresh(); }
         public void MoveSelected(int direction)
         {
+            if(hand.Length!=6)return;
             int next=selected+direction;
             if(next<0 || next>=6 || match.IsMatchRunning) return;
             var temp=hand[next]; hand[next]=hand[selected]; hand[selected]=temp; selected=next; Refresh();
         }
         public void BeginMatch()
         {
-            if(results || !Valid(hand) || !match.SelectHand(hand)) return;
+            if(results || (packShop!=null && packShop.IsOpen) || !Valid(hand) || !match.SelectHand(hand)) return;
             PlayerPrefs.SetString(SaveKey,JsonUtility.ToJson(new SavedHand { ids=hand.Select(c=>c.id).ToArray() }));
             PlayerPrefs.Save(); match.StartMatch();
         }
-        bool Valid(CardData[] value) => value!=null && value.Length==6 && value.All(c=>c!=null && Array.IndexOf(cards,c)>=0) && value.Select(c=>c.id).Distinct().Count()==6;
+        bool Valid(CardData[] value) => value!=null && value.Length==6 && value.All(c=>c!=null && Array.IndexOf(cards,c)>=0 && (progression==null || progression.Owns(c))) && value.Select(c=>c.id).Distinct().Count()==6;
         void Show()
         {
+            RefreshOwnership();
             results=false; root.gameObject.SetActive(true); root.SetAsLastSibling(); hud.SetVisible(false); openedAt=Time.unscaledTime;
-            title.text="BUILD YOUR SIX"; description.text="Tap a slot, then a card below to replace it.\nYour hand plays from 1 to 6.";
+            title.text="BUILD YOUR SIX"; description.text=progression?.SaveError??"Tap a slot, then an owned card below.\nOpen packs to grow your collection.";
             slotArea.gameObject.SetActive(true); viewport.gameObject.SetActive(true); start.gameObject.SetActive(true);
             earlier.gameObject.SetActive(true); later.gameObject.SetActive(true); detail.gameObject.SetActive(true);
             outcome.gameObject.SetActive(false); edit.gameObject.SetActive(false); Refresh();
@@ -97,17 +110,19 @@ namespace Pupverse
             earlier.gameObject.SetActive(false); later.gameObject.SetActive(false); detail.gameObject.SetActive(false);
             outcome.gameObject.SetActive(true); edit.gameObject.SetActive(true);
             outcome.text=winner==BattleMatchWinner.Draw?"All 12 cards reached the draw pot.\nBuild your hand and try again.":"All 12 cards captured.\nYour saved starting hand is ready for a rematch.";
+            if(progression!=null) outcome.text+="\n\n+"+progression.LastReward+" COINS  /  Wallet "+(progression.Collection?.Coins??0);
         }
         void Refresh()
         {
             if(!built) return;
             for(int i=0;i<6;i++)
             {
+                if(i>=hand.Length) {slotNames[i].text="EMPTY";continue;}
                 slotArt[i].texture=hand[i]?.originalCardArt;
                 slotNames[i].text=(i+1)+"  "+(hand[i]!=null?hand[i].displayName:"EMPTY");
                 slots[i].GetComponent<BattleHudGraphic>().Animate(i==selected?1:0);
             }
-            var c=hand[selected];
+            var c=selected<hand.Length?hand[selected]:null;
             detail.text=c==null?"Select a card":c.displayName+"  /  "+c.abilityName+"\n"+string.Join("   ",Enumerable.Range(0,5).Select(i=>((CardStat)i).ToString().Substring(0,3).ToUpperInvariant()+" "+c.EffectiveValue((CardStat)i)));
             earlier.interactable=selected>0; later.interactable=selected<5; start.interactable=Valid(hand);
         }
@@ -137,12 +152,16 @@ namespace Pupverse
             foreach(var card in cards)
             {
                 var entry=Button(card.displayName,content,()=>SelectCard(card));
+                collectionEntries.Add(entry.gameObject);
                 var art=Rect("Artwork",entry.transform).gameObject.AddComponent<RawImage>(); art.texture=card.originalCardArt; art.raycastTarget=false;
                 Place(art.rectTransform,8,8,47,72);
                 var name=Label("Name",entry.transform,card.displayName,12,Color.white); Place(name.rectTransform,62,52,102,30);
                 var series=Label("Series",entry.transform,card.series+"\n"+card.rarity,10,cyan); Place(series.rectTransform,62,14,102,36);
             }
-            start=TextButton("START MATCH  /  6 vs 6",root,BeginMatch);
+            homeButton=TextButton("HOME",root,()=>home.ShowHome());
+            start=TextButton("START MATCH",root,BeginMatch);
+            packs=TextButton("PACKS",root,()=>packShop.Open());
+            packs.gameObject.SetActive(packShop!=null);
             outcome=Label("Match result",root,"",18,Color.white);
             edit=TextButton("EDIT HAND / PLAY AGAIN",root,()=>match.EditHand());
         }
@@ -151,10 +170,11 @@ namespace Pupverse
             if(!IsOpen) return;
             group.alpha=GameSettings.ReducedMotion?1:Mathf.Clamp01((Time.unscaledTime-openedAt)/.24f);
             float w=Mathf.Min(540,root.rect.width-24), x=(root.rect.width-w)/2, h=root.rect.height;
+            homeButton.gameObject.SetActive(home!=null);
             if(root.rect.width>root.rect.height)
             {
                 float left=root.rect.width*.46f, right=root.rect.width-left-36;
-                Place(title.rectTransform,12,h-38,left,32); Place(description.rectTransform,12,h-82,left,42);
+                Place(title.rectTransform,12,h-38,left-76,32);Place((RectTransform)homeButton.transform,left-56,h-48,68,44); Place(description.rectTransform,12,h-82,left,42);
                 float cell=(left-16)/3;
                 Place(slotArea,12,h-264,left,176);
                 for(int i=0;i<6;i++)
@@ -167,13 +187,15 @@ namespace Pupverse
                 Place(viewport,left+24,70,right,h-82);
                 content.GetComponent<GridLayoutGroup>().cellSize=new Vector2(right,88);
                 content.GetComponent<GridLayoutGroup>().constraintCount=1;
-                content.sizeDelta=new Vector2(0,cards.Length*96-8);
-                Place(start.transform as RectTransform,left+24,12,right,48);
-                Place(outcome.rectTransform,24,h*.42f,root.rect.width-48,100); Place(edit.transform as RectTransform,24,20,root.rect.width-48,52);
+                content.sizeDelta=new Vector2(0,Mathf.Max(0,ownedTotal*96-8));
+                Place(start.transform as RectTransform,left+24,12,right*.55f-4,48);
+                Place(packs.transform as RectTransform,left+28+right*.55f,12,right*.45f-4,48);
+                Place(outcome.rectTransform,24,h*.42f,root.rect.width-48,100); Place(edit.transform as RectTransform,24,20,root.rect.width*.52f,52);
+                if(results)Place(packs.transform as RectTransform,root.rect.width*.56f,20,root.rect.width*.4f,52);
                 return;
             }
             content.GetComponent<GridLayoutGroup>().constraintCount=2;
-            Place(title.rectTransform,x,h-42,w,34); Place(description.rectTransform,x,h-88,w,42);
+            Place(title.rectTransform,x,h-42,w-80,34);Place((RectTransform)homeButton.transform,x+w-68,h-48,68,44); Place(description.rectTransform,x,h-88,w,42);
             float sw=(w-16)/3;
             Place(slotArea,x,h-270,w,176);
             for(int i=0;i<6;i++)
@@ -186,9 +208,26 @@ namespace Pupverse
             Place(detail.rectTransform,x,h-368,w,44);
             Place(viewport,x,66,w,Mathf.Max(44,h-444));
             var grid=content.GetComponent<GridLayoutGroup>(); grid.cellSize=new Vector2((w-8)/2,88);
-            content.sizeDelta=new Vector2(0,Mathf.Ceil(cards.Length/2f)*96-8);
-            Place(start.transform as RectTransform,x,10,w,48);
-            Place(outcome.rectTransform,x,h*.42f,w,120); Place(edit.transform as RectTransform,x,h*.3f,w,52);
+            content.sizeDelta=new Vector2(0,Mathf.Max(0,Mathf.Ceil(ownedTotal/2f)*96-8));
+            Place(start.transform as RectTransform,x,10,w*.55f-4,48);
+            Place(packs.transform as RectTransform,x+w*.55f+4,10,w*.45f-4,48);
+            Place(outcome.rectTransform,x,h*.42f,w,160); Place(edit.transform as RectTransform,x,h*.3f,w,52);
+        }
+        void RefreshOwnership()
+        {
+            if(!built)return;
+            ownedTotal=0;
+            for(int i=0;i<cards.Length;i++)
+            {
+                bool owned=progression==null || progression.Owns(cards[i]);
+                collectionEntries[i].SetActive(owned);if(owned)ownedTotal++;
+            }
+            if(progression!=null)
+            {
+                packs.GetComponentInChildren<Text>().text="PACKS / "+(progression.Collection?.Coins??0)+" COINS";
+                if(progression.SaveError!=null) description.text=progression.SaveError;
+            }
+            Refresh();
         }
         Button TextButton(string name,Transform parent,UnityEngine.Events.UnityAction action)
         {

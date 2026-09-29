@@ -9,6 +9,16 @@ namespace Pupverse.Editor
 {
     public static class BattleCardAnimationSetup
     {
+        [MenuItem("Pupverse/Testing/Add 10 Preview Coins (Play Mode)")]
+        public static void AddPreviewCoins()
+        {
+            var progression=Object.FindAnyObjectByType<BattleProgression>();
+            if(!Application.isPlaying || progression?.Collection==null)return;
+            progression.Collection.AwardMatch("editor-preview-"+System.Guid.NewGuid().ToString("N"),10);
+        }
+        [MenuItem("Pupverse/Testing/Add 10 Preview Coins (Play Mode)",true)]
+        static bool CanAddPreviewCoins() => Application.isPlaying && Object.FindAnyObjectByType<BattleProgression>()?.Collection!=null;
+
         [MenuItem("Pupverse/Open Mobile Battle")]
         public static void OpenMobileBattle()
         {
@@ -166,6 +176,17 @@ namespace Pupverse.Editor
             var selector=match.GetComponent<BattleHandSelection>();
             if(selector==null) selector=Undo.AddComponent<BattleHandSelection>(match.gameObject);
             Undo.RecordObject(selector,"Connect mobile hand builder"); selector.match=match; selector.hud=hud;
+            var progression=match.GetComponent<BattleProgression>();
+            if(progression==null) progression=Undo.AddComponent<BattleProgression>(match.gameObject);
+            Undo.RecordObject(progression,"Connect collection progression"); progression.match=match; match.progression=progression;
+            var shop=match.GetComponent<CardPackShop>();
+            if(shop==null) shop=Undo.AddComponent<CardPackShop>(match.gameObject);
+            Undo.RecordObject(shop,"Connect card pack shop"); shop.progression=progression; shop.hud=hud;
+            shop.foilShader=AssetDatabase.LoadAssetAtPath<Shader>("Assets/Shaders/PackFoil.shader");
+            selector.progression=progression; selector.packShop=shop;
+            var home=match.GetComponent<BattleHomeScreen>();
+            if(home==null)home=Undo.AddComponent<BattleHomeScreen>(match.gameObject);
+            selector.home=home;
             battle.comparisonDuration = 1.05f;
             battle.winnerReadDuration = .65f;
             battle.resultHoldDuration = 1.1f;

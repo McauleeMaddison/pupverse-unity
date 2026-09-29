@@ -64,6 +64,23 @@ namespace Pupverse
         Coroutine rivalPulse;
         Coroutine potPulse;
 
+        readonly List<TransferVisual> transfers = new List<TransferVisual>(3);
+        int activeTransfers;
+        bool delayCounts;
+        public bool IsTransferring => activeTransfers > 0;
+        public int ActiveTransferCount => activeTransfers;
+        public Vector2 PlayerTransferOrigin => GetSourcePosition(match.cardDisplay != null ? match.cardDisplay.playerFront : null);
+        public Vector2 RivalTransferOrigin => GetSourcePosition(match.cardDisplay != null ? match.cardDisplay.rivalFront : null);
+
+        sealed class TransferVisual
+        {
+            public RectTransform rect;
+            public RawImage art;
+            public Text label;
+            public CanvasGroup group;
+            public BattleHudGraphic glow;
+        }
+
         bool built;
         bool subscribed;
 
@@ -169,21 +186,37 @@ namespace Pupverse
 
         void OnEnable()
         {
-            if (built)
-            {
-                Subscribe();
-            }
+            if (!built) return;
+            Subscribe();
+            lastPlayerCard=match.PlayerActiveCard;
+            lastRivalCard=match.RivalActiveCard;
+            RefreshCounts(match.PlayerCardCount,match.RivalCardCount,match.PotCount);
+            SetVisible(match.IsMatchRunning);
         }
 
         void OnDisable()
         {
             Unsubscribe();
+            CancelTransfers();
+            SetVisible(false);
+        }
 
+        void OnDestroy()
+        {
+            if(root!=null) Destroy(root.gameObject);
+        }
+
+        public void CancelTransfers()
+        {
             StopAllCoroutines();
-
-            playerPulse = null;
-            rivalPulse = null;
-            potPulse = null;
+            activeTransfers=0; delayCounts=false;
+            playerPulse=rivalPulse=potPulse=null;
+            foreach(var item in transfers)
+                if(item.rect!=null) item.rect.gameObject.SetActive(false);
+            foreach(var panel in new[]{playerPanel,rivalPanel,potPanel})
+                if(panel!=null) { panel.rectTransform.localScale=Vector3.one; panel.Animate(.15f); }
+            if(built && root!=null && playerPanel!=null && rivalPanel!=null && potPanel!=null && match!=null)
+                RefreshCounts(match.PlayerCardCount,match.RivalCardCount,match.PotCount);
         }
 
         void Subscribe()
@@ -275,6 +308,7 @@ namespace Pupverse
             BuildPlayerStack();
             BuildRivalStack();
             BuildPot();
+            BuildTransfers();
         }
 
         void BuildPlayerStack()
@@ -412,6 +446,7 @@ namespace Pupverse
                             BattleHudGraphic
                         >();
 
+                frame.raycastTarget=false;
                 frame.shape =
                     BattleHudGraphic.Shape.Panel;
 
@@ -439,6 +474,7 @@ namespace Pupverse
                             BattleHudGraphic
                         >();
 
+                line.raycastTarget=false;
                 line.shape =
                     BattleHudGraphic.Shape.Bar;
 
@@ -480,6 +516,7 @@ namespace Pupverse
 
         void MatchStarted()
         {
+            CancelTransfers();
             SetVisible(true);
 
             RefreshCounts(
@@ -493,20 +530,13 @@ namespace Pupverse
 
         void HandSelectionOpened()
         {
+            CancelTransfers();
             SetVisible(false);
         }
 
-        void CountsChanged(
-            int player,
-            int rival,
-            int pot
-        )
+        void CountsChanged(int player,int rival,int pot)
         {
-            RefreshCounts(
-                player,
-                rival,
-                pot
-            );
+            if(!delayCounts) RefreshCounts(player,rival,pot);
         }
 
         void RoundPrepared(
@@ -527,70 +557,33 @@ namespace Pupverse
             PulseBothStacks();
         }
 
-        void RoundSettled(
-            BattleResult result,
-            int collected
-        )
+        void RoundSettled(BattleResult result,int collected)
         {
-            if (result.Winner ==
-                BattleWinner.Draw)
+            if(!isActiveAndEnabled || !built) return;
+            if(GameSettings.ReducedMotion)
             {
-                AnimateDrawToPot();
-
-                PulsePot();
-
+                delayCounts=false;
+                RefreshCounts(match.PlayerCardCount,match.RivalCardCount,match.PotCount);
                 return;
             }
-
-            if (result.Winner ==
-                BattleWinner.Player)
-            {
-                AnimateCapture(
-                    lastRivalCard,
-                    match.cardDisplay != null
-                        ? match.cardDisplay.rivalRoot
-                        : null,
-                    playerPanel.rectTransform,
-                    PlayerColour
-                );
-
-                PulsePlayer();
-            }
-            else
-            {
-                AnimateCapture(
-                    lastPlayerCard,
-                    match.cardDisplay != null
-                        ? match.cardDisplay.playerRoot
-                        : null,
-                    rivalPanel.rectTransform,
-                    RivalColour
-                );
-
-                PulseRival();
-            }
+            bool draw=result.Winner==BattleWinner.Draw;
+            RectTransform target=draw?potRoot:result.Winner==BattleWinner.Player?playerPanel.rectTransform:rivalPanel.rectTransform;
+            Color colour=draw?PotColour:result.Winner==BattleWinner.Player?PlayerColour:RivalColour;
+            if(draw) potPanel.gameObject.SetActive(true);
+            Layout();
+            // Reserve every transfer before starting any coroutine, including the staggered card.
+            int count=collected>2?3:2;
+            activeTransfers=count;
+            StartCoroutine(FlyCard(transfers[0],lastPlayerCard,PlayerTransferOrigin,target,colour,0,null));
+            StartCoroutine(FlyCard(transfers[1],lastRivalCard,RivalTransferOrigin,target,colour,.09f,null));
+            if(count==3)
+                StartCoroutine(FlyCard(transfers[2],null,GetTargetPosition(potRoot),target,PotColour,.18f,"POT\n+"+(collected-2)));
         }
 
-        void MatchEnded(
-            BattleMatchWinner winner
-        )
+        void MatchEnded(BattleMatchWinner winner)
         {
-            RefreshCounts(
-                match.PlayerCardCount,
-                match.RivalCardCount,
-                match.PotCount
-            );
-
-            if (winner ==
-                BattleMatchWinner.Player)
-            {
-                PulsePlayer();
-            }
-            else if (winner ==
-                     BattleMatchWinner.Rival)
-            {
-                PulseRival();
-            }
+            CancelTransfers();
+            SetVisible(false);
         }
 
         void RefreshCounts(
@@ -664,315 +657,67 @@ namespace Pupverse
                 );
         }
 
-        void AnimateCapture(
-            CardData card,
-            Transform source,
-            RectTransform target,
-            Color colour
-        )
+        void BuildTransfers()
         {
-            if (GameSettings.ReducedMotion ||
-                card == null ||
-                card.originalCardArt == null)
+            for(int i=0;i<3;i++)
             {
-                return;
-            }
-
-            StartCoroutine(
-                FlyCard(
-                    card,
-                    source,
-                    target,
-                    colour
-                )
-            );
-        }
-
-        void AnimateDrawToPot()
-        {
-            if (GameSettings.ReducedMotion)
-                return;
-
-            if (lastPlayerCard != null &&
-                lastPlayerCard.originalCardArt != null)
-            {
-                StartCoroutine(
-                    FlyCard(
-                        lastPlayerCard,
-                        match.cardDisplay != null
-                            ? match.cardDisplay.playerRoot
-                            : null,
-                        potRoot,
-                        PotColour
-                    )
-                );
-            }
-
-            if (lastRivalCard != null &&
-                lastRivalCard.originalCardArt != null)
-            {
-                StartCoroutine(
-                    FlyCard(
-                        lastRivalCard,
-                        match.cardDisplay != null
-                            ? match.cardDisplay.rivalRoot
-                            : null,
-                        potRoot,
-                        PotColour
-                    )
-                );
+                var rect=CreateRect("Card transfer "+i,root);
+                rect.sizeDelta=new Vector2(48,70);
+                var glow=rect.gameObject.AddComponent<BattleHudGraphic>();
+                glow.shape=BattleHudGraphic.Shape.Panel; glow.surfaceOpacity=.55f; glow.openFrame=true;
+                glow.raycastTarget=false;
+                var artRect=CreateRect("Artwork",rect);
+                artRect.anchorMin=new Vector2(.08f,.08f); artRect.anchorMax=new Vector2(.92f,.92f);
+                artRect.offsetMin=artRect.offsetMax=Vector2.zero;
+                var art=artRect.gameObject.AddComponent<RawImage>(); art.raycastTarget=false;
+                var label=CreateLabel("Pot cards",rect,"",12,PotColour);
+                Stretch(label.rectTransform); label.alignment=TextAnchor.MiddleCenter;
+                var group=rect.gameObject.AddComponent<CanvasGroup>(); group.blocksRaycasts=group.interactable=false;
+                transfers.Add(new TransferVisual {rect=rect,glow=glow,art=art,label=label,group=group});
+                rect.gameObject.SetActive(false);
             }
         }
 
-        IEnumerator FlyCard(
-            CardData card,
-            Transform source,
-            RectTransform target,
-            Color colour
-        )
+        IEnumerator FlyCard(TransferVisual item,CardData card,Vector2 from,RectTransform target,Color colour,float delay,string label)
         {
-            RectTransform ghost =
-                CreateRect(
-                    "Captured card",
-                    root
-                );
-
-            ghost.SetAsLastSibling();
-
-            ghost.sizeDelta =
-                new Vector2(
-                    48,
-                    70
-                );
-
-            BattleHudGraphic glow =
-                ghost.gameObject
-                    .AddComponent<
-                        BattleHudGraphic
-                    >();
-
-            glow.shape =
-                BattleHudGraphic.Shape.Panel;
-
-            glow.accent =
-                colour;
-
-            glow.surfaceOpacity =
-                0.55f;
-
-            glow.openFrame =
-                true;
-
-            RectTransform artRect =
-                CreateRect(
-                    "Artwork",
-                    ghost
-                );
-
-            artRect.anchorMin =
-                new Vector2(
-                    0.08f,
-                    0.08f
-                );
-
-            artRect.anchorMax =
-                new Vector2(
-                    0.92f,
-                    0.92f
-                );
-
-            artRect.offsetMin =
-                Vector2.zero;
-
-            artRect.offsetMax =
-                Vector2.zero;
-
-            RawImage image =
-                artRect.gameObject
-                    .AddComponent<
-                        RawImage
-                    >();
-
-            image.texture =
-                card.originalCardArt;
-
-            image.raycastTarget =
-                false;
-
-            CanvasGroup group =
-                ghost.gameObject
-                    .AddComponent<
-                        CanvasGroup
-                    >();
-
-            group.blocksRaycasts =
-                false;
-
-            group.interactable =
-                false;
-
-            Vector2 from =
-                GetSourcePosition(
-                    source
-                );
-
-            Vector2 to =
-                GetTargetPosition(
-                    target
-                );
-
-            ghost.anchoredPosition =
-                from;
-
-            ghost.localScale =
-                Vector3.one;
-
-            float duration =
-                Mathf.Max(
-                    0.01f,
-                    captureDuration
-                );
-
-            /*
-             * Arc away from the centre before
-             * snapping into the winning deck.
-             */
-            Vector2 middle =
-                Vector2.Lerp(
-                    from,
-                    to,
-                    0.5f
-                );
-
-            middle.y +=
-                68f;
-
-            float elapsed =
-                0f;
-
-            while (elapsed <
-                   duration)
+            if(delay>0) yield return new WaitForSecondsRealtime(delay);
+            item.rect.gameObject.SetActive(true); item.rect.SetAsLastSibling();
+            item.art.texture=card!=null?card.originalCardArt:null;
+            item.art.enabled=item.art.texture!=null;
+            item.label.text=label??""; item.glow.Tint(colour);
+            item.group.alpha=1;
+            float duration=Mathf.Max(.01f,captureDuration);
+            for(float elapsed=0;elapsed<duration;elapsed+=Time.unscaledDeltaTime)
             {
-                elapsed +=
-                    Time.unscaledDeltaTime;
-
-                float t =
-                    Mathf.Clamp01(
-                        elapsed /
-                        duration
-                    );
-
-                float eased =
-                    Mathf.SmoothStep(
-                        0f,
-                        1f,
-                        t
-                    );
-
-                Vector2 a =
-                    Vector2.Lerp(
-                        from,
-                        middle,
-                        eased
-                    );
-
-                Vector2 b =
-                    Vector2.Lerp(
-                        middle,
-                        to,
-                        eased
-                    );
-
-                ghost.anchoredPosition =
-                    Vector2.Lerp(
-                        a,
-                        b,
-                        eased
-                    );
-
-                float spin =
-                    Mathf.Sin(
-                        t *
-                        Mathf.PI
-                    ) *
-                    8f;
-
-                ghost.localRotation =
-                    Quaternion.Euler(
-                        0,
-                        0,
-                        spin
-                    );
-
-                float scale =
-                    Mathf.Lerp(
-                        1f,
-                        0.42f,
-                        eased
-                    );
-
-                ghost.localScale =
-                    Vector3.one *
-                    scale;
-
-                /*
-                 * Keep it solid for most of the trip,
-                 * then dissolve into the stack.
-                 */
-                group.alpha =
-                    t < 0.72f
-                        ? 1f
-                        : Mathf.InverseLerp(
-                            1f,
-                            0.72f,
-                            t
-                        );
-
-                glow.Animate(
-                    Mathf.Sin(
-                        t *
-                        Mathf.PI
-                    )
-                );
-
+                if(GameSettings.ReducedMotion) break;
+                float t=Mathf.Clamp01(elapsed/duration), eased=Mathf.SmoothStep(0,1,t);
+                Vector2 to=GetTargetPosition(target);
+                Vector2 middle=Vector2.Lerp(from,to,.5f)+Vector2.up*68;
+                item.rect.anchoredPosition=Vector2.Lerp(Vector2.Lerp(from,middle,eased),Vector2.Lerp(middle,to,eased),eased);
+                item.rect.localRotation=Quaternion.Euler(0,0,Mathf.Sin(t*Mathf.PI)*8);
+                item.rect.localScale=Vector3.one*Mathf.Lerp(1,.42f,eased);
+                item.group.alpha=t<.72f?1:Mathf.InverseLerp(1,.72f,t);
+                item.glow.Animate(Mathf.Sin(t*Mathf.PI));
                 yield return null;
             }
-
-            Destroy(
-                ghost.gameObject
-            );
+            item.rect.gameObject.SetActive(false);
+            activeTransfers--;
+            if(activeTransfers==0)
+            {
+                delayCounts=false;
+                RefreshCounts(match.PlayerCardCount,match.RivalCardCount,match.PotCount);
+                if(target==playerPanel.rectTransform) PulsePlayer();
+                else if(target==rivalPanel.rectTransform) PulseRival();
+                else PulsePot();
+            }
         }
 
-        Vector2 GetSourcePosition(
-            Transform source
-        )
+        Vector2 GetSourcePosition(Renderer source)
         {
-            if (source == null ||
-                layout.battleCamera == null)
-            {
-                return Vector2.zero;
-            }
-
-            Vector3 screen =
-                layout.battleCamera
-                    .WorldToScreenPoint(
-                        source.position
-                    );
-
-            Camera uiCamera =
-                canvas.renderMode ==
-                RenderMode.ScreenSpaceOverlay
-                    ? null
-                    : canvas.worldCamera;
-
-            RectTransformUtility
-                .ScreenPointToLocalPointInRectangle(
-                    root,
-                    screen,
-                    uiCamera,
-                    out Vector2 local
-                );
-
+            if(source==null || layout.battleCamera==null) return Vector2.zero;
+            Vector3 screen=layout.battleCamera.WorldToScreenPoint(source.bounds.center);
+            Camera uiCamera=canvas.renderMode==RenderMode.ScreenSpaceOverlay?null:canvas.worldCamera;
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(root,screen,uiCamera,out Vector2 local);
             return local;
         }
 
@@ -1077,7 +822,7 @@ namespace Pupverse
             Color colour
         )
         {
-            if (graphic == null)
+            if (graphic == null || GameSettings.ReducedMotion)
                 yield break;
 
             RectTransform rect =
@@ -1164,6 +909,7 @@ namespace Pupverse
                 return;
             }
 
+            if(match==null || !match.isActiveAndEnabled) { CancelTransfers(); SetVisible(false); return; }
             Layout();
         }
 
@@ -1331,6 +1077,7 @@ namespace Pupverse
             graphic.shape =
                 BattleHudGraphic.Shape.Panel;
 
+            graphic.raycastTarget=false;
             graphic.accent =
                 colour;
 

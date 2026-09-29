@@ -26,6 +26,7 @@ namespace Pupverse
         public const int StartingCardCount = 6;
         public CardData[] availableCards;
         public BattleCardDisplay cardDisplay;
+        public BattleProgression progression;
         public BattleController Battle => battle;
         public CardData[] StartingHand => (CardData[])playerStartingCards.Clone();
         public BattleMatchWinner LastWinner { get; private set; }
@@ -78,6 +79,8 @@ namespace Pupverse
         bool matchRunning;
         bool waitingForRoundSettlement;
 
+        BattleDeckPresentation deckPresentation;
+        BattleMatchWinner pendingWinner;
         Coroutine flowCoroutine;
         Coroutine rivalTurnCoroutine;
 
@@ -125,6 +128,7 @@ namespace Pupverse
 
         void Awake()
         {
+            deckPresentation=GetComponent<BattleDeckPresentation>();
             if (battle == null)
             {
                 battle =
@@ -182,7 +186,7 @@ namespace Pupverse
         {
             if(matchRunning || battle==null || battle.IsResolving || !ValidateHand(cards,"Player")) return false;
             foreach(var card in cards)
-                if(availableCards==null || Array.IndexOf(availableCards,card)<0 || card.originalCardArt==null) return false;
+                if(availableCards==null || Array.IndexOf(availableCards,card)<0 || card.originalCardArt==null || (progression!=null && !progression.Owns(card))) return false;
             playerStartingCards=(CardData[])cards.Clone(); return true;
         }
         public void EditHand()
@@ -199,7 +203,7 @@ namespace Pupverse
             StopFlowCoroutines();
 
             battle.ResetSession();
-            LastWinner=BattleMatchWinner.None;
+            LastWinner=BattleMatchWinner.None; pendingWinner=BattleMatchWinner.None;
             playerDeck.Clear();
             rivalDeck.Clear();
             drawPot.Clear();
@@ -265,6 +269,9 @@ namespace Pupverse
             {
                 return false;
             }
+
+            if(progression!=null && Array.Exists(playerStartingCards,c=>!progression.Owns(c)))
+            { Debug.LogWarning("Choose six cards from your owned collection.",this); return false; }
 
             if (!ValidateHand(
                     rivalStartingCards,
@@ -490,8 +497,15 @@ namespace Pupverse
                 HandleWin(result);
             }
 
-            if (!matchRunning)
+            // Ownership is already settled; input stays locked until the visible cards land.
+            while(deckPresentation!=null && deckPresentation.isActiveAndEnabled && deckPresentation.IsTransferring)
+                yield return null;
+            if(!matchRunning) yield break;
+            if(pendingWinner!=BattleMatchWinner.None)
+            {
+                EndMatch(pendingWinner);
                 yield break;
+            }
 
             if (nextRoundDelay > 0f)
             {
@@ -578,15 +592,11 @@ namespace Pupverse
 
             if (playerDeck.Count == 0)
             {
-                EndMatch(
-                    BattleMatchWinner.Rival
-                );
+                pendingWinner = BattleMatchWinner.Rival;
             }
             else if (rivalDeck.Count == 0)
             {
-                EndMatch(
-                    BattleMatchWinner.Player
-                );
+                pendingWinner = BattleMatchWinner.Player;
             }
         }
 
@@ -624,9 +634,7 @@ namespace Pupverse
             if (playerDeck.Count == 0 &&
                 rivalDeck.Count == 0)
             {
-                EndMatch(
-                    BattleMatchWinner.Draw
-                );
+                pendingWinner = BattleMatchWinner.Draw;
 
                 return;
             }
@@ -637,9 +645,7 @@ namespace Pupverse
                     rivalDeck
                 );
 
-                EndMatch(
-                    BattleMatchWinner.Rival
-                );
+                pendingWinner = BattleMatchWinner.Rival;
 
                 return;
             }
@@ -650,9 +656,7 @@ namespace Pupverse
                     playerDeck
                 );
 
-                EndMatch(
-                    BattleMatchWinner.Player
-                );
+                pendingWinner = BattleMatchWinner.Player;
             }
         }
 
@@ -806,6 +810,7 @@ namespace Pupverse
         void StopFlowCoroutines()
         {
             StopAllCoroutines();
+            if(deckPresentation!=null) deckPresentation.CancelTransfers();
             if(cardDisplay!=null) cardDisplay.CancelReveal();
             if (flowCoroutine != null)
             {

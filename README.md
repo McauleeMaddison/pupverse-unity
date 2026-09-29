@@ -6,13 +6,22 @@ Editable Unity mobile game starter. Your project is on the Desktop, and its priv
 
 - **Unity mobile battle:** double-click `Open in Unity.command`. Use Unity **6000.6.0f1**, choose **Pupverse → Open Mobile Battle**, then press Play. This opens `Assets/Scenes/Battle3D.unity`.
 - **VS Code:** double-click `Open in VS Code.command` or open `Pupverse.code-workspace`.
+- **Home:** Play opens a 3D card showcase with your coin balance. **Battle Arena** and **My Cards** open the collection/hand builder; **Open Packs** opens the shop; **Settings** saves your Reduced Motion preference; **How to Play** explains the match rules. Use **Home** in the hand builder or results to return.
 - **Build your six:** tap a numbered slot, then a card in the scrolling collection. Picking a card already in your hand swaps its position. Move Earlier / Move Later sets the play order. Start Match saves the six selected IDs locally.
+- **Packs and collection:** tap **Packs** in the hand builder or match results. Alien, Crypto and Cyber packs each contain four random cards from that series. Swipe across the top of the 3D foil wrapper to tear off its seal (or use Open Without Swipe). Four physical cards emerge into a fan. Reveal each pull, then tap **Keep Cards** and open **My Cards** from Home. Only owned cards can be selected; duplicate pulls increase the saved copy count. Starting hands still contain six distinct card IDs.
 - **Battle:** both sides start with six. Tap a stat on your turn. Base plus ability bonus is compared on both active cards. The winner places their own card and the captured opponent card at the back of their queue; both reveal the next card. The winner chooses the next stat; the local rival chooses from its own stats.
+- **Capture animation:** both played cards travel from their arena faces to the winner’s stack. Draw-pot winnings join them. Card counts update on arrival; the next deal and final result wait for the transfer. Reduced Motion skips the flights.
 - **Draws:** both cards enter a shared pot; the next winner takes it too. If one side cannot draw again, the other takes the pot and wins. If both run out simultaneously, the match is a draw.
 - **Match end:** capture all 12 cards to win, then edit your starting hand or play again. Captures affect this match only, not permanent collection ownership.
 - **Checks:** **Pupverse → Run Battle Checks (Temporary)** runs the battle checks and restores Battle3D afterwards. The older MainMenu / Battle scenes remain the original two-card demo.
 
 Everything can be edited manually without Codex.
+
+## Local pack economy
+
+Battle3D is already wired. For a development preview with an empty wallet, enter Play mode and choose **Pupverse → Testing → Add 10 Preview Coins (Play Mode)**. This Editor-only command adds local test currency without resetting your collection; it is not included in the mobile player. Select **BattleMatchController → Battle Progression** in the Inspector to tune the prototype: 10 one-time welcome coins, 5 coins per match victory, 1 per drawn match, 0 per defeat; Crypto packs cost 5, Cyber 8 and Alien 10. Each contains four independent pulls with replacement. Rarity weights are editable and the shop displays the actual chances among available tiers (currently Rare 60%, Epic 28%, Legendary 10%, Mythic 2%). Higher rarity is not a guaranteed win: cards retain their existing individual stats and abilities.
+
+The first launch preserves your existing six-card selection as your starter collection. Wallet, owned copy counts and a pending reveal are saved together under `Pupverse.Collection.v1` in PlayerPrefs, with a previous-save backup. Closing during a reveal resumes the same purchased cards without charging again. Match rewards are recorded once per match. Card artwork, catalogue stats and arena transforms are unchanged. This is device-local progression, with no purchases, accounts, trading or server-authoritative economy yet. Match captures do not remove cards from either player's permanent collection.
 
 ## Folder map
 
@@ -24,6 +33,7 @@ Pupverse/
 │   ├── Scenes/       Battle3D mobile battle plus legacy MainMenu and Battle
 │   ├── Prefabs/      Reusable hero and card
 │   ├── Scripts/      All game, UI and motion C# files
+│   ├── Shaders/      Foil pack surface
 │   └── Editor/       Build tools and Tests/
 ├── Packages/         Unity dependencies
 ├── ProjectSettings/  Unity configuration
@@ -45,7 +55,7 @@ Unity also generates hidden cache, log and solution files. They are excluded fro
 | Buttons and battle flow | `Assets/Scripts/BattleController.cs` |
 | Idle movement, tilt or entrance | `Assets/Scripts/IdleMotion.cs` and `CardMotion.cs` |
 | iOS export | Unity menu → Pupverse → Export iOS Xcode project |
-| Run the 12 Unity checks | Window → General → Test Runner → EditMode → Run All |
+| Run Unity checks | Window → General → Test Runner → EditMode → Run All |
 
 Each Unity component has its own C# file. Keep `.meta` files with their assets; they hold scene references. They are hidden from VS Code Explorer but tracked by Git. Use Unity's Project window to move assets during normal editing.
 
@@ -55,7 +65,7 @@ Each Unity component has its own C# file. Keep `.meta` files with their assets; 
 
 In VS Code: **Source Control → review changes → Stage → Commit → Sync Changes**. Saving alone does not upload files. The remote is `origin`; the branch is `main`.
 
-This is a local training game. iOS settings are configured; signing and physical-device testing are still needed. Accounts, packs, online play and cloud saves are future work.
+This is a local training game. iOS settings are configured; signing and physical-device testing are still needed. Pack opening and coin rewards are local prototypes. Accounts, online play, cloud saves and realm progression are future work.
 
 <details>
 <summary>Development, iOS and VS Code</summary>
@@ -72,7 +82,7 @@ This is a local training game. iOS settings are configured; signing and physical
 
 ## Committed player configuration
 
-Product PupVerse; company Pupverse; version 0.1.0/build 1; initial bundle ID `com.pupverse.mobile`; iOS 15.0 minimum; iPhone and iPad; portrait; IL2CPP; device SDK; accelerometer 60 Hz. Native iOS uses ARM64. The scene list starts with MainMenu and then Battle. Classic input supports mouse, touches and accelerometer; no gyroscope permission is required by this code. Motion can be disabled from the menu.
+Product PupVerse; company Pupverse; version 0.1.0/build 1; initial bundle ID `com.pupverse.mobile`; iOS 15.0 minimum; iPhone and iPad; portrait; IL2CPP; device SDK; accelerometer 60 Hz. Native iOS uses ARM64. The scene list now starts with Battle3D (including the mobile home screen), followed by the preserved MainMenu and Battle demos. Classic input supports mouse, touches and accelerometer; no gyroscope permission is required by this code. Motion can be disabled from the menu.
 
 Automatic signing is enabled, but **no Apple Developer team is selected**. Select your team in Xcode to run on a physical device. Confirm the final bundle identifier before TestFlight or release.
 
@@ -80,7 +90,7 @@ Automatic signing is enabled, but **no Apple Developer team is selected**. Selec
 
 In Unity choose `Pupverse → Export iOS Xcode project`. Each export uses a new timestamped folder to preserve previous Xcode edits. It is a development export. To create a production archive later, disable development options in the build process and supply the final icon, signing and store configuration.
 
-The Unity project can stay on the Mac target for fast Play-mode testing. The export method explicitly builds for iOS. If you manually use File → Build Profiles, switch to iOS and ensure the two scenes are included.
+The Unity project can stay on the Mac target for fast Play-mode testing. The export method explicitly builds for iOS. If you manually use File → Build Profiles, switch to iOS and ensure Battle3D is enabled and listed first.
 
 ## VS Code
 

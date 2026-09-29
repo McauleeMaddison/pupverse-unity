@@ -3877,6 +3877,9 @@ GameObject:
   - component: {fileID: 416956950}
   - component: {fileID: 416956952}
   - component: {fileID: 416956953}
+  - component: {fileID: 416956956}
+  - component: {fileID: 416956955}
+  - component: {fileID: 416956954}
   m_Layer: 0
   m_Name: BattleMatchController
   m_TagString: Untagged
@@ -3955,6 +3958,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 5e4a8b38ad1d942c99fc3012fce9ef10, type: 2}
   - {fileID: 11400000, guid: d679fe9ac7b174770b2085bbc41d564b, type: 2}
   cardDisplay: {fileID: 416956951}
+  progression: {fileID: 416956955}
   battle: {fileID: 1264139118}
   playerStartingCards:
   - {fileID: 11400000, guid: 0227f550866484755b088312560f57a1, type: 2}
@@ -4003,6 +4007,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Pupverse.Runtime::Pupverse.BattleHandSelection
   match: {fileID: 416956948}
   hud: {fileID: 2040079867}
+  progression: {fileID: 416956955}
+  packShop: {fileID: 416956954}
+  home: {fileID: 416956956}
 --- !u!114 &416956951
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4070,6 +4077,72 @@ MonoBehaviour:
   normalGlow: 1.15
   legendaryGlow: 2.1
   mythicGlow: 2.65
+--- !u!114 &416956954
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 416956947}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4ac760b75d0b14eb784ea7fc927cde5d, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Pupverse.Runtime::Pupverse.CardPackShop
+  progression: {fileID: 416956955}
+  hud: {fileID: 2040079867}
+  foilShader: {fileID: 4800000, guid: 14a0bfc6e48a4e82b88b883d77a9d520, type: 3}
+--- !u!114 &416956955
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 416956947}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a138861ca9fcb49b684804338a2f07d8, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Pupverse.Runtime::Pupverse.BattleProgression
+  match: {fileID: 416956948}
+  welcomeCoins: 10
+  victoryCoins: 5
+  drawCoins: 1
+  packs:
+  - id: alien
+    title: ALIEN
+    series: AlienPups
+    price: 10
+    cardCount: 4
+  - id: crypto
+    title: CRYPTO
+    series: CryptoPups
+    price: 5
+    cardCount: 4
+  - id: cyber
+    title: CYBER
+    series: CyberPups
+    price: 8
+    cardCount: 4
+  rarityWeights:
+  - 70
+  - 20
+  - 60
+  - 28
+  - 10
+  - 2
+  - 2
+--- !u!114 &416956956
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_GameObject: {fileID: 416956947}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6dbb9170032d454f98ee236c68be588f, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Pupverse.Runtime::Pupverse.BattleHomeScreen
 --- !u!1 &431192963
 GameObject:
   m_ObjectHideFlags: 0

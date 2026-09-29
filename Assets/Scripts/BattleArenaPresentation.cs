@@ -100,7 +100,7 @@ namespace Pupverse
         void Start()
         {
             battle =
-                Object.FindFirstObjectByType<
+                Object.FindAnyObjectByType<
                     BattleController
                 >();
 

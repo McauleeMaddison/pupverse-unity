@@ -117,7 +117,7 @@ namespace Pupverse
             if (match == null)
             {
                 match =
-                    Object.FindFirstObjectByType<
+                    Object.FindAnyObjectByType<
                         BattleMatchController
                     >();
             }
@@ -125,7 +125,7 @@ namespace Pupverse
             if (layout == null)
             {
                 layout =
-                    Object.FindFirstObjectByType<
+                    Object.FindAnyObjectByType<
                         Battle3DController
                     >();
             }

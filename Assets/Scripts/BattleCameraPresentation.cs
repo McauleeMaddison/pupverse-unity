@@ -154,7 +154,7 @@ namespace Pupverse
             if (battle == null)
             {
                 battle =
-                    Object.FindFirstObjectByType<
+                    Object.FindAnyObjectByType<
                         BattleController
                     >();
             }

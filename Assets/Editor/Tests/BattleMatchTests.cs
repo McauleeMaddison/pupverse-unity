@@ -338,6 +338,32 @@ namespace Pupverse.Tests
             display.enabled=false;Assert.That(display.playerFront.sharedMaterial,Is.SameAs(original));
         }
 
+        [UnityTest] public IEnumerator DisablingPhoneLayoutRestoresAutomaticCameraProjectionAcrossAspectChanges()
+        {
+            var layout=Object.FindAnyObjectByType<Battle3DController>();
+            var camera=layout.battleCamera;yield return null;yield return null;layout.SendMessage("LateUpdate");
+            var position=camera.transform.position;var rotation=camera.transform.rotation;
+            for(int cycle=0;cycle<2;cycle++)
+            {
+                layout.enabled=false;
+                Assert.That(camera.rect,Is.EqualTo(new Rect(0,0,1,1)));
+                foreach(float aspect in new[]{390f/844f,844f/390f})
+                {
+                    camera.aspect=aspect;
+                    var expected=Matrix4x4.Perspective(camera.fieldOfView,aspect,camera.nearClipPlane,camera.farClipPlane);
+                    var actual=camera.projectionMatrix;
+                    Assert.That(actual.m00,Is.EqualTo(expected.m00).Within(.0001f),"Stopped camera must adapt to portrait/landscape resizing");
+                    Assert.That(actual.m11,Is.EqualTo(expected.m11).Within(.0001f));
+                    Assert.That(actual.m12,Is.EqualTo(0).Within(.0001f));
+                }
+                Assert.That(camera.transform.position,Is.EqualTo(position));Assert.That(camera.transform.rotation,Is.EqualTo(rotation));
+                camera.ResetAspect();layout.enabled=true;yield return null;yield return null;
+                // Headless EditMode coroutine yields do not guarantee a rendered LateUpdate.
+                layout.SendMessage("LateUpdate");
+                Assert.That(camera.projectionMatrix.m12,Is.Not.EqualTo(0),"Runtime arena framing must resume on re-enable");
+            }
+        }
+
         static void Capture(string name,int width=0,int height=0)
         {
             string folder=Path.Combine(Application.temporaryCachePath,"BattleMatchChecks"); Directory.CreateDirectory(folder);

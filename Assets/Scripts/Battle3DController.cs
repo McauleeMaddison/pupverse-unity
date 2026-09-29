@@ -13,7 +13,6 @@ namespace Pupverse
         public Text instruction;
         public Camera battleCamera;
         Rect originalViewport;
-        Matrix4x4 originalProjection;
         bool ownsViewport;
         Canvas canvas;
         CanvasScaler scaler;
@@ -85,7 +84,6 @@ namespace Pupverse
             if(!ownsViewport)
             {
                 originalViewport=battleCamera.rect;
-                originalProjection=battleCamera.projectionMatrix;
                 ownsViewport=true;
             }
             battleCamera.rect=new Rect(safe.x/Screen.width,safe.y/Screen.height,safe.width/Screen.width,safe.height/Screen.height);
@@ -129,7 +127,13 @@ namespace Pupverse
         }
         void OnDisable()
         {
-            if(ownsViewport && battleCamera!=null) { battleCamera.rect=originalViewport; battleCamera.projectionMatrix=originalProjection; }
+            if(ownsViewport && battleCamera!=null)
+            {
+                battleCamera.rect=originalViewport;
+                // A saved matrix would leave projection manual and freeze the old aspect ratio.
+                // Give projection ownership back to Unity for stopped/resized Simulator previews.
+                battleCamera.ResetProjectionMatrix();
+            }
             ownsViewport=false;
             if(matteRoot!=null) Destroy(matteRoot.gameObject);
         }

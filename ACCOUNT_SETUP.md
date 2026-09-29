@@ -2,6 +2,8 @@
 
 Home remains the start screen. Tap **Guest / Account** for sign-in, account creation or password reset. **Continue as Guest** returns to Home without changing your cards, coins or hand. No scene wiring is required.
 
+The configured Firebase project is `pupverse-arcade`, with an iOS app registered as `com.pupverse.mobile`. Its downloaded app configuration supplied the public API key. Provider enablement and live sign-in have not yet been verified; Apple remains disabled in the config until its setup is complete.
+
 ## Connect email/password
 
 1. Open the [Firebase console](https://console.firebase.google.com/). Select the PupVerse project, or create a dedicated one if none exists. Do not reuse another game's project by accident.

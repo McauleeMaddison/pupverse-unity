@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: PupverseAccountConfig
   m_EditorClassIdentifier: Pupverse.Runtime::Pupverse.PlayerAccountConfig
   firebaseProjectId: pupverse-arcade
-  firebaseWebApiKey:
+  firebaseWebApiKey: "AIzaSyAbAPY5aHlRpbD694GTKu3hwvpV-IvQ5q0"
   emailEnabled: 1
   appleEnabled: 0

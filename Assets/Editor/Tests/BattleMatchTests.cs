@@ -372,9 +372,10 @@ namespace Pupverse.Tests
             string before=PlayerPrefs.GetString(BattleProgression.SaveKey);int coins=match.progression.Collection.Coins;
             home.OpenAccount();var account=match.GetComponent<PlayerAccountScreen>();Assert.That(account.IsOpen,Is.True);Assert.That(home.IsOpen,Is.False);
             Capture("account-sign-in",390,844);Capture("account-compact",390,640);Capture("account-landscape",844,390);
-            Assert.That(match.GetComponent<PlayerAccountController>().Service.EmailAvailable,Is.False,"Tests must not connect to a live Firebase project");
             account.SetMode(AccountAction.CreateAccount);Capture("account-create",390,844);
-            account.SetCredentials("player@example.com","test-password","test-password");var submit=account.Submit();while(!submit.IsCompleted)yield return null;Assert.That(submit.Result,Is.False);
+            // Invalid input must stop before networking, even when the game has a live Firebase config.
+            Assert.That(PlayerAccountService.Validate(AccountAction.CreateAccount,"not-an-email","test-password","test-password"),Is.Not.Empty);
+            account.SetCredentials("not-an-email","test-password","test-password");var submit=account.Submit();while(!submit.IsCompleted)yield return null;Assert.That(submit.Result,Is.False);
             foreach(var field in Object.FindObjectsByType<InputField>())if(field.contentType==InputField.ContentType.Password)Assert.That(field.text,Is.Empty);
             account.SetMode(AccountAction.ResetPassword);Capture("account-reset",390,844);
             account.ContinueAsGuest();Assert.That(home.IsOpen,Is.True);Assert.That(account.IsOpen,Is.False);

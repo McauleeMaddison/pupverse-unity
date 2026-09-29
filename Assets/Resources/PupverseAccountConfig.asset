@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 901b91bb3ab44dbea607ff0782567821, type: 3}
   m_Name: PupverseAccountConfig
   m_EditorClassIdentifier: Pupverse.Runtime::Pupverse.PlayerAccountConfig
-  firebaseProjectId:
+  firebaseProjectId: pupverse-arcade
   firebaseWebApiKey:
   emailEnabled: 1
   appleEnabled: 0

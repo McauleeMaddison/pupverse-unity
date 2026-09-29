@@ -54,7 +54,12 @@ namespace Pupverse
             }
             if (shape == Shape.Panel)
             {
-                float c = Mathf.Min(8, r.height * .14f);
+                if(!openFrame)
+                {
+                    Rect shadow=r;shadow.y-=3;
+                    Quad(vh,shadow,new Color(0,0,0,.22f),new Color(0,0,0,.04f));
+                }
+                float c = Mathf.Min(10, r.height * .14f);
                 corners[0] = new Vector2(r.xMin+c,r.yMin); corners[1] = new Vector2(r.xMax-c,r.yMin);
                 corners[2] = new Vector2(r.xMax,r.yMin+c); corners[3] = new Vector2(r.xMax,r.yMax-c);
                 corners[4] = new Vector2(r.xMax-c,r.yMax); corners[5] = new Vector2(r.xMin+c,r.yMax);
@@ -62,14 +67,17 @@ namespace Pupverse
                 Color bottom = new Color(.025f,.05f,.11f,surfaceOpacity);
                 Color top = Color.Lerp(new Color(.06f,.12f,.20f), accent, .10f + emphasis * .12f);
                 top.a=surfaceOpacity*.45f;
+                int panelStart=vh.currentVertCount;
                 vh.AddVert(r.center, Color.Lerp(bottom, top, .5f), Vector2.zero);
                 for (int i=0;i<8;i++) vh.AddVert(corners[i], Color.Lerp(bottom,top,Mathf.InverseLerp(r.yMin,r.yMax,corners[i].y)), Vector2.zero);
                 for (int i=0;i<8;i++)
                 {
-                    vh.AddTriangle(0,i+1,(i+1)%8+1);
+                    vh.AddTriangle(panelStart,panelStart+i+1,panelStart+(i+1)%8+1);
                     if(!openFrame || i%2==1)
                         Line(vh,corners[i],corners[(i+1)%8],1,WithAlpha(accent,.24f+emphasis*.5f));
                 }
+                if(!openFrame)
+                    Line(vh,new Vector2(r.xMin+10,r.yMax-1),new Vector2(r.xMax-10,r.yMax-1),1,WithAlpha(Color.Lerp(accent,Color.white,.65f),.18f+emphasis*.12f));
                 Line(vh,new Vector2(r.xMin+8,r.yMin+1),new Vector2(r.xMax-8,r.yMin+1),1,WithAlpha(accent,.22f));
                 float head=Mathf.Lerp(r.xMin+10,r.xMax-10,phase);
                 Line(vh,new Vector2(Mathf.Max(r.xMin+8,head-24),r.yMin+1),new Vector2(head,r.yMin+1),1.5f,WithAlpha(accent,.55f+emphasis*.4f));

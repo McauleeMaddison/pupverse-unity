@@ -34,7 +34,7 @@ namespace Pupverse
             if(built || progression==null || hud==null) return;
             font=progression.match.Battle.resultTitle.font;
             root=Rect("Card pack shop",hud.layout.controlsRoot.parent); Stretch(root);
-            root.gameObject.AddComponent<Image>().color=new Color(.015f,.025f,.07f,.995f);
+            root.gameObject.AddComponent<BattleMenuBackdrop>().opacity=.95f;root.GetComponent<BattleMenuBackdrop>().raycastTarget=true;
             title=Label("Pack title",root,"PUPVERSE PACKS",24,Color.white);
             wallet=Label("Coin balance",root,"",12,Cyan);
             subtitle=Label("Pack instructions",root,"Four cards. One new possibility.",12,Muted);
@@ -201,7 +201,7 @@ namespace Pupverse
         Button Button(string name,Transform parent,UnityEngine.Events.UnityAction clicked)
         {
             var r=Rect(name,parent);var surface=r.gameObject.AddComponent<BattleHudGraphic>();surface.shape=BattleHudGraphic.Shape.Panel;surface.accent=Cyan;surface.surfaceOpacity=.5f;
-            var b=r.gameObject.AddComponent<Button>();b.targetGraphic=surface;b.onClick.AddListener(clicked);b.navigation=new Navigation{mode=Navigation.Mode.None};
+            r.gameObject.AddComponent<BattleMenuMotion>();var b=r.gameObject.AddComponent<Button>();b.targetGraphic=surface;b.onClick.AddListener(clicked);b.navigation=new Navigation{mode=Navigation.Mode.None};
             var label=Label("Label",r,name,12,Color.white);Stretch(label.rectTransform);label.rectTransform.offsetMin=new Vector2(7,4);label.rectTransform.offsetMax=new Vector2(-7,-4);label.alignment=TextAnchor.MiddleCenter;return b;
         }
         Text Label(string name,Transform parent,string value,int size,Color colour){var t=Rect(name,parent).gameObject.AddComponent<Text>();t.font=font;t.text=value;t.fontSize=size;t.fontStyle=FontStyle.Bold;t.color=colour;t.raycastTarget=false;return t;}

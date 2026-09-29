@@ -126,7 +126,7 @@ namespace Pupverse.Tests
             Assert.That(selector.SelectCard(locked),Is.False,"Unowned cards must be earned through packs");
             var replacement=original[0];
             selector.SelectSlot(0); selector.SelectCard(replacement);
-            Capture("hand-builder"); yield return new WaitForSecondsRealtime(.25f);
+            yield return new WaitForSecondsRealtime(.3f);Capture("hand-builder",390,844);Capture("hand-builder-compact",390,640);
             selector.BeginMatch(); yield return Ready(); yield return null;
             Assert.That(selector.IsOpen,Is.False); Assert.That(match.PlayerActiveCard,Is.SameAs(replacement));
             var block=new MaterialPropertyBlock(); match.cardDisplay.playerFront.GetPropertyBlock(block);
@@ -286,6 +286,15 @@ namespace Pupverse.Tests
         {
             var home=match.GetComponent<BattleHomeScreen>();home.ShowHome();yield return null;yield return null;
             Assert.That(home.IsOpen,Is.True);Assert.That(selector.IsOpen,Is.False);Assert.That(match.IsMatchRunning,Is.False);
+            var showcase=Object.FindAnyObjectByType<HomeCardShowcase>();Assert.That(showcase.VisibleCardCount,Is.EqualTo(3));
+            GameSettings.ReducedMotion=false;yield return new WaitForSecondsRealtime(.8f);
+            var rect=(RectTransform)showcase.transform;
+            var input=new UnityEngine.EventSystems.PointerEventData(UnityEngine.EventSystems.EventSystem.current){pointerId=7};
+            input.position=RectTransformUtility.WorldToScreenPoint(null,rect.TransformPoint(new Vector3(rect.rect.xMax-5,rect.rect.center.y,0)));
+            showcase.OnPointerDown(input);yield return new WaitForSecondsRealtime(.2f);
+            Assert.That(showcase.Tilt.x,Is.GreaterThan(.1f));showcase.OnPointerUp(input);
+            GameSettings.ReducedMotion=true;yield return null;yield return null;
+            showcase.RenderPreview();Assert.That(showcase.Tilt,Is.EqualTo(Vector2.zero));
             Capture("home",390,844);Capture("home-compact",390,640);Capture("home-landscape",844,390);
             home.OpenSettings();Assert.That(home.SettingsOpen,Is.True);bool before=GameSettings.ReducedMotion;
             home.ToggleMotion();Assert.That(GameSettings.ReducedMotion,Is.Not.EqualTo(before));home.ShowHome();
@@ -321,7 +330,8 @@ namespace Pupverse.Tests
                     Canvas.ForceUpdateCanvases();
                     var shop=Object.FindAnyObjectByType<CardPackShop>();shop.SendMessage("LateUpdate");
                     Object.FindAnyObjectByType<BattleHomeScreen>()?.SendMessage("LateUpdate");
-                    Canvas.ForceUpdateCanvases();foreach(var stage in Object.FindObjectsByType<PackFoilPresentation>())stage.RenderPreview();camera.Render();RenderTexture.active=rt;
+                    Object.FindAnyObjectByType<BattleHandSelection>()?.SendMessage("LateUpdate");
+                    Canvas.ForceUpdateCanvases();foreach(var stage in Object.FindObjectsByType<PackFoilPresentation>())stage.RenderPreview();foreach(var stage in Object.FindObjectsByType<HomeCardShowcase>())stage.RenderPreview();camera.Render();RenderTexture.active=rt;
                     texture.ReadPixels(new Rect(0,0,rt.width,rt.height),0,0);texture.Apply();File.WriteAllBytes(path,texture.EncodeToPNG());
                 }
                 finally

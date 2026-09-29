@@ -131,7 +131,7 @@ namespace Pupverse
             root=Rect("Six-card hand builder",hud.layout.controlsRoot.parent);
             root.anchorMin=Vector2.zero; root.anchorMax=Vector2.one; root.offsetMin=root.offsetMax=Vector2.zero;
             group=root.gameObject.AddComponent<CanvasGroup>();
-            var shade=root.gameObject.AddComponent<Image>(); shade.color=new Color(.018f,.03f,.08f,.91f);
+            var shade=root.gameObject.AddComponent<BattleMenuBackdrop>();shade.opacity=.91f;shade.raycastTarget=true;
             title=Label("Title",root,"",24,Color.white);
             description=Label("Instructions",root,"",12,new Color(.65f,.76f,.86f));
             slotArea=Rect("Starting order",root);
@@ -237,7 +237,7 @@ namespace Pupverse
         Button Button(string name,Transform parent,UnityEngine.Events.UnityAction action)
         {
             var r=Rect(name,parent); var graphic=r.gameObject.AddComponent<BattleHudGraphic>(); graphic.shape=BattleHudGraphic.Shape.Panel; graphic.accent=cyan; graphic.surfaceOpacity=.45f; graphic.raycastTarget=true;
-            var b=r.gameObject.AddComponent<Button>(); b.targetGraphic=graphic; b.onClick.AddListener(action); b.navigation=new Navigation {mode=Navigation.Mode.None}; return b;
+            r.gameObject.AddComponent<BattleMenuMotion>();var b=r.gameObject.AddComponent<Button>(); b.targetGraphic=graphic; b.onClick.AddListener(action); b.navigation=new Navigation {mode=Navigation.Mode.None}; return b;
         }
         Text Label(string name,Transform parent,string value,int size,Color color)
         {

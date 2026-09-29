@@ -29,7 +29,9 @@ namespace Pupverse
         void Start()
         {
             match=GetComponent<BattleMatchController>();hand=GetComponent<BattleHandSelection>();progression=GetComponent<BattleProgression>();shop=GetComponent<CardPackShop>();hud=hand.hud;
-            hand.home=this;GameSettings.Initialize();font=match.Battle.resultTitle.font;
+            hand.home=this;
+            if(match.cardDisplay!=null && match.cardDisplay.cardFoilShader==null)match.cardDisplay.cardFoilShader=shop.cardFoilShader;
+            GameSettings.Initialize();font=match.Battle.resultTitle.font;
             Build();built=true;match.MatchStarted+=Hide;
             if(progression.Collection!=null)progression.Collection.Changed+=RefreshWallet;
             ShowHome();

@@ -33,6 +33,8 @@ namespace Pupverse.Tests
             match=Object.FindAnyObjectByType<BattleMatchController>(); battle=match.Battle;
             selector=match.GetComponent<BattleHandSelection>();
             yield return null; yield return null;
+            Assert.That(match.GetComponent<BattleHomeScreen>().IsOpen,Is.True,"A normal launch must start at Home without a manual ShowHome call");
+            Assert.That(selector.IsOpen,Is.False,"Hand building is entered through Home");
             match.GetComponent<BattleHomeScreen>().OpenHand();
         }
         [UnityTearDown] public IEnumerator Teardown()

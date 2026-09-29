@@ -29,7 +29,15 @@ namespace Pupverse
         public bool IsAnimating => busy;
         static readonly Color Muted=new Color(.63f,.73f,.86f);
         static readonly Color Cyan=new Color(.2f,.94f,1);
-        void Start() {Build();root.gameObject.SetActive(false);}
+        void Awake()
+        {
+            if(progression==null)progression=GetComponent<BattleProgression>();
+            if(hud==null)hud=GetComponent<BattleHandSelection>()?.hud;
+            // Serialized shader references keep these in mobile builds; lookup also repairs an older loaded scene.
+            if(foilShader==null)foilShader=Shader.Find("Pupverse/FoilPack");
+            if(cardFoilShader==null)cardFoilShader=Shader.Find("Pupverse/CollectibleCardFoil");
+        }
+        void Start() {Build();if(root!=null)root.gameObject.SetActive(false);}
         void Build()
         {
             if(built || progression==null || hud==null) return;

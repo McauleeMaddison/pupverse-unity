@@ -38,6 +38,14 @@ namespace Pupverse
 
         void Start()
         {
+            // Older scenes already open in the Editor may predate the home component/references.
+            // Resolve co-located services before building UI, without changing saved scene objects.
+            if(match==null)match=GetComponent<BattleMatchController>();
+            if(progression==null)progression=GetComponent<BattleProgression>();
+            if(packShop==null)packShop=GetComponent<CardPackShop>();
+            if(home==null)home=GetComponent<BattleHomeScreen>();
+            if(home==null && progression!=null && packShop!=null)home=gameObject.AddComponent<BattleHomeScreen>();
+            if(home!=null)home.enabled=true;
             if(match==null || hud==null || hud.layout==null) { enabled=false; return; }
             cards=(match.availableCards??Array.Empty<CardData>()).Where(c=>c!=null && c.originalCardArt!=null)
                 .GroupBy(c=>c.id).Select(g=>g.First()).OrderBy(c=>c.series).ThenBy(c=>c.displayName).ToArray();
@@ -56,9 +64,11 @@ namespace Pupverse
                 hand=cards.Where(progression.Owns).Take(6).ToArray();
             font=match.Battle.resultTitle.font;
             Build(); built=true; Subscribe();
-            if(match.IsMatchRunning) Hide(); else Show();
+            if(match.IsMatchRunning) Hide();
+            else if(home!=null) {HideForHome();hud.SetVisible(false);}
+            else Show();
         }
-        void OnEnable() { if(built) { Subscribe(); if(!match.IsMatchRunning) Show(); } }
+        void OnEnable() { if(built) { Subscribe(); if(!match.IsMatchRunning && (home==null || !home.IsOpen) && (packShop==null || !packShop.IsOpen)) Show(); } }
         void Subscribe() { if(progression?.Collection!=null) progression.Collection.Changed+=RefreshOwnership; match.MatchStarted+=Hide; match.MatchEnded+=End; match.HandSelectionOpened+=Show; }
         void OnDisable()
         {
